@@ -2,6 +2,9 @@
 # check=error=true
 FROM 3.14.3-slim-bookworm
 
+LABEL maintainer="Kuroki-g" \
+    version="0.0.1"
+
 ENV TRANSFORMERS_OFFLINE=1
 ENV HF_DATASETS_OFFLINE=1
 ENV HF_HOME=/app/models
