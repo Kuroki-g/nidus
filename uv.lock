@@ -328,6 +328,8 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
+    { name = "init-scripts" },
+    { name = "mcp-server" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
 ]
@@ -340,6 +342,8 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "init-scripts", editable = "packages/init-scripts" },
+    { name = "mcp-server", editable = "packages/mcp-server" },
     { name = "pytest", specifier = ">=9.0.2" },
     { name = "pytest-asyncio", specifier = ">=1.3.0" },
 ]
