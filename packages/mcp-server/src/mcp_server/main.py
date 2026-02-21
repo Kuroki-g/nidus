@@ -16,16 +16,15 @@ def search_docs(keyword: str) -> int:
     """TODO: Search by keyword"""
     return keyword
 
-# Add a dynamic greeting resource
-@mcp.resource("greeting://{name}")
-def get_greeting(name: str) -> str:
-    """Get a personalized greeting"""
-    return f"Hello, {name}!"
+@mcp.resource("docs://{name}")
+def get_docs(name: str) -> str:
+    """TODO: Get document from mounted docs directory"""
+    return f"Doc: {name}!"
 
 # Add a prompt
 @mcp.prompt()
-def greet_user(name: str, style: str = "friendly") -> str:
-    """Generate a greeting prompt"""
+def custom_instruction(name: str, style: str = "friendly") -> str:
+    """TODO: Read custom instruction from mounted file"""
     styles = {
         "friendly": "Please write a warm, friendly greeting",
         "formal": "Please write a formal, professional greeting",
