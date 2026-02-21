@@ -9,7 +9,11 @@ def main():
     resources.register_resources(mcp)
     prompts.register_prompts(mcp)
 
-    mcp.run(transport="streamable-http")
+    try:
+        mcp.run(transport="streamable-http")
+    except KeyboardInterrupt:
+        import sys
+        sys.exit(0)
 
 if __name__ == "__main__":
     main()
