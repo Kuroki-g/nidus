@@ -28,6 +28,7 @@ dev = [
 
 [project.scripts]
 serve = "mcp_server.main:main"
+init = "init_scripts:main"
 
 [tool.uv.sources]
 mcp-server = { workspace = true }
