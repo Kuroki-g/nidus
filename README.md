@@ -21,3 +21,13 @@ qdrant
 DuckDB + vss
 
 - https://duckdb.org/docs/stable/core_extensions/vss
+
+```yml
+service:
+    nidus-mcp:
+        image: "docker image to do"
+        volumns:
+            - docs
+        env:
+            - PORT=2122
+```
