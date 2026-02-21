@@ -1,2 +1,3 @@
-def main() -> None:
-    print("Hello from init-scripts!")
+from .main import main
+
+__all__ = ["main"]
