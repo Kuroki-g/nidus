@@ -310,7 +310,6 @@ name = "init-scripts"
 version = "0.1.0"
 source = { editable = "packages/init-scripts" }
 dependencies = [
-    { name = "lancedb" },
     { name = "sentence-transformers" },
     { name = "torch", version = "2.10.0", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "sys_platform == 'darwin'" },
     { name = "torch", version = "2.10.0+cpu", source = { registry = "https://download.pytorch.org/whl/cpu" }, marker = "sys_platform != 'darwin'" },
@@ -318,7 +317,6 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "lancedb", specifier = ">=0.29.2" },
     { name = "sentence-transformers", specifier = ">=3.3.1" },
     { name = "torch", index = "https://download.pytorch.org/whl/cpu" },
 ]
@@ -537,6 +535,7 @@ dependencies = [
 [package.dev-dependencies]
 dev = [
     { name = "init-scripts" },
+    { name = "lancedb" },
     { name = "mcp-server" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
@@ -551,6 +550,7 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "init-scripts", editable = "packages/init-scripts" },
+    { name = "lancedb", specifier = ">=0.29.2" },
     { name = "mcp-server", editable = "packages/mcp-server" },
     { name = "pytest", specifier = ">=9.0.2" },
     { name = "pytest-asyncio", specifier = ">=1.3.0" },
