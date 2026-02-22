@@ -16,7 +16,6 @@ def get_embedding(text):
     return model.model.encode(text).astype(np.float32)
 
 
-
 def chunk_asciidoc(path: Path, chunk_size=500):
     raise NotImplementedError()
 
