@@ -1,5 +1,5 @@
 from mcp.server.fastmcp import FastMCP
-from mcp_server.lance_db_manager import LanceDBManager
+from packages.common.src.lance_db_manager import LanceDBManager
 from . import tools, resources, prompts
 
 DB_PATH = "./.lancedb"

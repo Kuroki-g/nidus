@@ -2,7 +2,6 @@ import threading
 
 import lancedb
 
-
 class LanceDBManager:
     _instance = None
     _db = None
