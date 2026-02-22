@@ -3,73 +3,10 @@ from pathlib import Path
 import click
 from common.logger_setup import setup_logging
 from common.model import EmbeddingModelManager
-from common.config import settings
-from cli.processor.file_processor import data_generator
-import pyarrow as pa  # https://github.com/lancedb/lancedb/issues/2384
-from typing import List, Union
-
-from common.lance_db_manager import LanceDBManager
+from cli.db.update_db import update_files_in_db
+from cli.db.init import init_db
 
 model = EmbeddingModelManager()
-
-
-def init_db(
-    path_list: List[Union[str, Path]],
-    table_name: str = settings.TABLE_NAME,
-    db_path=settings.DB_PATH,
-):
-    """
-    Read documents from target directory.
-    """
-    db = LanceDBManager(db_path).db
-    schema = pa.schema(
-        [
-            pa.field("vector", pa.list_(pa.float32(), model.vector_size)),
-            pa.field("text", pa.string()),
-            pa.field(
-                "metadata",
-                pa.struct(
-                    [
-                        pa.field("source", pa.string()),
-                        pa.field("chunk_id", pa.int64()),
-                    ]
-                ),
-            ),
-        ]
-    )
-
-    table = db.create_table(
-        table_name,
-        schema=schema,
-        data=data_generator(path_list),
-        mode="overwrite",
-    )
-    table.create_fts_index("text", replace=True)
-    logger.info(f"Database initialized and FTS index created for table: {table_name}")
-
-
-def update_files_in_db(
-    path_list: List[Path],
-    table_name: str = settings.TABLE_NAME,
-    db_path=settings.DB_PATH,
-):
-    """
-    Delete assigned file and update contents.
-    """
-    db = LanceDBManager(db_path).db
-    table = db.open_table(table_name)
-
-    # delete target file record
-    paths_str = ", ".join([f"'{str(p)}'" for p in path_list])
-    delete_query = f"metadata.source IN ({paths_str})"
-    table.delete(delete_query)
-    logger.info(f"Deleted old data for: {paths_str}")
-
-    # add new record
-    table.add(data_generator(path_list))
-    table.create_fts_index("text", replace=True)
-
-    logger.info("Database update and FTS index optimization complete.")
 
 
 setup_logging(level="INFO")
