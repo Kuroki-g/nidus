@@ -469,11 +469,15 @@ name = "mcp-server"
 version = "0.1.0"
 source = { editable = "packages/mcp-server" }
 dependencies = [
+    { name = "cli" },
     { name = "common" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "common", editable = "packages/common" }]
+requires-dist = [
+    { name = "cli", editable = "packages/cli" },
+    { name = "common", editable = "packages/common" },
+]
 
 [[package]]
 name = "mdurl"
