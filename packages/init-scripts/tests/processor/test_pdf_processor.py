@@ -1,4 +1,4 @@
-from init_scripts.processor.pdf_processor import chunk_pdf
+from init_scripts.processor.pdf_processor import chunk_pdf_by_pdfminer
 import pytest
 from pathlib import Path
 
@@ -13,7 +13,7 @@ def test_chunk_pdf_real_file():
     assert SAMPLE_PDF.exists(), f"テスト用PDFが {SAMPLE_PDF} に見当たりません"
 
     chunk_size = 200
-    chunks = chunk_pdf(SAMPLE_PDF, chunk_size=chunk_size)
+    chunks = chunk_pdf_by_pdfminer(SAMPLE_PDF, chunk_size=chunk_size)
 
     # 検証
     assert isinstance(chunks, list)
@@ -27,11 +27,11 @@ def test_chunk_pdf_real_file():
 def test_chunk_pdf_file_not_found():
     """存在しないパスを渡したときに正しくエラーが出るか"""
     with pytest.raises(FileNotFoundError):
-        chunk_pdf(Path("this_file_does_not_exist.pdf"))
+        chunk_pdf_by_pdfminer(Path("this_file_does_not_exist.pdf"))
 
 
 def test_chunk_pdf_default_size():
     """デフォルトのチャンクサイズ(500)が適用されるか"""
-    chunks = chunk_pdf(SAMPLE_PDF)
+    chunks = chunk_pdf_by_pdfminer(SAMPLE_PDF)
 
     assert len(chunks) >= 1

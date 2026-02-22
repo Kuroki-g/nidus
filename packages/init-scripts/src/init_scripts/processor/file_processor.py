@@ -5,9 +5,8 @@ from typing import Callable, Iterable, List, Optional, Union
 
 from common.model import EmbeddingModelManager
 from init_scripts.processor.markdown_processor import chunk_markdown
-from init_scripts.processor.pdf_processor import chunk_pdf
+from init_scripts.processor.pdf_processor import chunk_pdf_by_pdfminer
 import numpy as np
-from pypdf import PdfReader
 
 model = EmbeddingModelManager()
 logger = logging.getLogger(__name__)
@@ -29,7 +28,7 @@ CHUNK_STRATEGIES: dict[str, Callable[[Path], List[str]]] = {
     ".md": lambda path: chunk_markdown(path),
     ".adoc": lambda path: chunk_asciidoc(path),
     ".txt": lambda path: chunk_plain_text(path),
-    ".pdf": lambda path: chunk_pdf(path),
+    ".pdf": lambda path: chunk_pdf_by_pdfminer(path),
 }
 
 

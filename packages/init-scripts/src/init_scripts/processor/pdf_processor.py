@@ -1,19 +1,15 @@
 from pathlib import Path
 
-from pypdf import PdfReader
+from pathlib import Path
+from pdfminer.high_level import extract_text
 
-
-def chunk_pdf(path: Path, chunk_size=500):
+def chunk_pdf_by_pdfminer(path: Path, chunk_size=500):
     if not path.exists():
         raise FileNotFoundError(f"File not found: {path}")
 
-    reader = PdfReader(path)
-    full_text = ""
-    for page in reader.pages:
-        text = page.extract_text()
-        if text:
-            full_text += text + "\n"
+    full_text = extract_text(str(path))
 
+    # あとは元のロジックと同じ
     cleaned_text = " ".join(full_text.split())
 
     chunks = [
