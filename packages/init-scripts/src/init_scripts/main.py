@@ -20,7 +20,7 @@ os.environ["HF_DATASETS_OFFLINE"] = "1"
 # https://huggingface.co/hotchpotch/static-embedding-japanese
 model_name = "hotchpotch/static-embedding-japanese"
 model = SentenceTransformer(model_name, local_files_only=True)
-
+MODEL_VECTOR_SIZE = 1024
 
 def get_embedding(text):
     return model.encode(text).tolist()
@@ -53,7 +53,7 @@ class FileMetadata(LanceModel):
 
 class MySchema(LanceModel):
     model_config = {"arbitrary_types_allowed": True}
-    vector: Annotated[list[float], Vector(1536)]
+    vector: Annotated[list[float], Vector(MODEL_VECTOR_SIZE)]
     text: str
     metadata: FileMetadata
 
