@@ -4,25 +4,28 @@ NidusMCP is an open-source MCP server that search documents information locally.
 It provides locally-restricted document search.
 
 ## Quick start
+
 ### Install globally with uv and serve
 
 Installation:
+
 ```bash
 uv tool install git+https://github.com/Kuroki-g/nidus-mcp.git
 ```
 
 Init database:
+
 ```bash
 nidus init --doc_dir={YOUR_DOC_DIR}
 ```
 
-Run Ninus Server:
+Run Nidus Server:
+
 ```bash
 nidus serve
 ```
 
-You tell AI agenet CLI by editing your `settings.json`.
-
+You tell AI agent CLI by editing your `settings.json`.
 
 ```json
 {
@@ -56,10 +59,6 @@ volumes:
     nidus_data:
 ```
 
-
-## Arch
-
-![Arch](docs/architecture.drawio.png)
-
 ## License
+
 - License: [Apache License 2.0](https://github.com/Kuroki-g/nidus-mcp/blob/main/LICENSE)
