@@ -7,17 +7,7 @@ authors = [
     { name = "Kuroki-g", email = "64629990+Kuroki-g@users.noreply.github.com" }
 ]
 requires-python = ">=3.14"
-dependencies = [
-    "sentence-transformers>=3.3.1",
-    "torch",
-]
-
-[tool.uv.sources]
-torch = { index = "pytorch" }
-
-[[tool.uv.index]]
-name = "pytorch"
-url = "https://download.pytorch.org/whl/cpu"
+dependencies = []
 
 [project.scripts]
 init = "init_scripts:main"
