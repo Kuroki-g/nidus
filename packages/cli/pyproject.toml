@@ -1,9 +1,9 @@
 [project]
 name = "cli"
 version = "0.1.0"
-description = "Add your description here"
+description = "Nidus CLI"
 readme = "README.md"
-requires-python = "==3.13.*"
+requires-python = "==3.14.*"
 dependencies = [
     "common",
     "mistune>=3.2.0",
