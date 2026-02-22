@@ -1,0 +1,40 @@
+# Git
+.git
+.gitignore
+
+# Docker
+docker-compose.yml
+Dockerfile
+.dockerignore
+
+# Python キャッシュ・コンパイルファイル
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# 仮想環境
+.venv/
+venv/
+env/
+ENV/
+
+# 環境変数・機密情報
+.env
+*.swp
+*.bak
+
+# ビルド・配布物
+dist/
+build/
+*.egg-info/
+
+# IDE設定
+.vscode/
+.idea/
+
+# ログ・データ
+*.log
+data/

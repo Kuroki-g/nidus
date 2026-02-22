@@ -1,16 +1,62 @@
 # syntax=docker/dockerfile:1
 # check=error=true
-FROM 3.14.3-slim-bookworm
+FROM ghcr.io/astral-sh/uv:python3.14-trixie-slim AS builder
+
+ENV UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy \
+    HF_HOME=/app/models \
+    TRANSFORMERS_OFFLINE=1
+
+WORKDIR /app
+
+RUN --mount=type=cache,target=/root/.cache/uv \
+    --mount=type=bind,source=uv.lock,target=uv.lock \
+    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+    --mount=type=bind,source=packages,target=packages \
+    uv sync --frozen --no-install-project --no-editable --no-dev
+
+ARG MODEL_MOUNT_PATH
+ARG HF_MODEL_DIR="models--hotchpotch--static-embedding-japanese"
+ARG MODEL_ID="hotchpotch/static-embedding-japanese"
+ARG REVISION="default"
+ENV MODEL_SAVE_PATH="${HF_HOME}/hub/${HF_MODEL_DIR}/snapshots/default"
+
+ENV PATH="/app/.venv/bin:$PATH"
+
+RUN --mount=type=bind,source=${MODEL_MOUNT_PATH},target=/tmp/model_source python <<EOF
+import os
+from sentence_transformers import SentenceTransformer
+# Load mounted file and save
+model = SentenceTransformer('/tmp/model_source')
+save_path = os.path.join(os.environ['HF_HOME'], 'hub', os.environ['HF_MODEL_DIR'], 'snapshots/default')
+model.save_pretrained(save_path)
+EOF
+
+# Create files to reference
+RUN mkdir -p ${HF_HOME}/hub/${HF_MODEL_DIR}/refs/ && \
+    echo "default" > ${HF_HOME}/hub/${HF_MODEL_DIR}/refs/main
+
+COPY . /app
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --no-dev
+
+FROM python:3.14-slim-trixie
 
 LABEL maintainer="Kuroki-g" \
     version="0.0.1"
 
-ENV TRANSFORMERS_OFFLINE=1
-ENV HF_DATASETS_OFFLINE=1
-ENV HF_HOME=/app/models
+ENV HF_HOME=/app/models \
+    HF_DATASETS_OFFLINE=1 \
+    TRANSFORMERS_OFFLINE=1 \
+    PATH="/app/.venv/bin:$PATH"
 
-COPY ./models/static-embedding-japanese /app/models/hub/models--hotchpotch--static-embedding-japanese
+WORKDIR /app
 
-RUN --mount=type=cache,target=/root/.cache/huggingface \
-    python -c "from sentence_transformers import SentenceTransformer; \
-    SentenceTransformer('hotchpotch/static-embedding-japanese', local_files_only=True)"
+COPY --from=builder /app/.venv /app/.venv
+COPY --from=builder /app/models /app/models
+COPY --from=builder /app/packages /app/packages
+
+RUN useradd -m appuser && chown -R appuser:appuser /app
+USER appuser
+
+CMD ["python", "packages/mcp-server/src/mcp_server/main.py"]
