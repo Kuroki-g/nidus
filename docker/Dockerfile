@@ -62,4 +62,4 @@ COPY --from=builder --chown=appuser:appuser /app/packages /app/packages
 
 USER appuser
 
-CMD ["python", "packages/mcp-server/src/mcp_server/main.py"]
+CMD ["python", "-m", "mcp_server.main"]
