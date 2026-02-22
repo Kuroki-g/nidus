@@ -11,7 +11,7 @@ from common.model import EmbeddingModelManager
 
 def search_docs(keyword: str) -> str:
     """
-    ナレッジベースからベクトル検索で関連ドキュメントを探します。
+    Search documents from database.
     """
     db = LanceDBManager().db
     try:

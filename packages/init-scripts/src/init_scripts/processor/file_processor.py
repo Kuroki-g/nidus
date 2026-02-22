@@ -25,7 +25,6 @@ def chunk_plain_text(path: Path, chunk_size=500):
     raise NotImplementedError()
 
 
-
 CHUNK_STRATEGIES: dict[str, Callable[[Path], List[str]]] = {
     ".md": lambda path: chunk_markdown(path),
     ".adoc": lambda path: chunk_asciidoc(path),
