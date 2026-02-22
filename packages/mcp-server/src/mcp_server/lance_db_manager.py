@@ -18,9 +18,8 @@ class LanceDBManager:
         return cls._instance
 
     @property
-    def db(self):
+    def db(self) -> lancedb.DBConnection:
         return self._db
-
 
 def get_db():
     manager = LanceDBManager()
