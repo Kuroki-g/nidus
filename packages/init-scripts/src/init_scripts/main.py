@@ -1,9 +1,15 @@
+import argparse
 import os
 from pathlib import Path
-from typing import Annotated, Iterable, List, Optional, Union
+import pyarrow as pa # https://github.com/lancedb/lancedb/issues/2384
+from typing import Annotated, Iterable, List, Optional, Union, Type
 from sentence_transformers import SentenceTransformer
 from lancedb.pydantic import Vector, LanceModel
-
+try:
+    from pyarrow.lib import FixedSizeListMixin
+except ImportError:
+    # 環境によって場所が異なる場合があるためのガード
+    FixedSizeListMixin = object
 import lancedb
 
 # Offline not to access hagging face by mistake
@@ -40,7 +46,8 @@ class FileMetadata(LanceModel):
     chunk_id: int
 
 class MySchema(LanceModel):
-    vector: Annotated[Vector, 1536]
+    model_config = {"arbitrary_types_allowed": True}
+    vector: Annotated[list[float], Vector(1536)]
     text: str
     metadata: FileMetadata
 
@@ -84,15 +91,33 @@ def data_generator(path_list: List[Union[str, Path]], batch_size: int = 1000) ->
     if buffer:
         yield buffer
 
-def init_db(path_list: List[Union[str, Path]], table_name: str = "docs"):
+def init_db(
+        path_list: List[Union[str, Path]], 
+        table_name: str = "docs",
+        db_path = "./.lancedb"
+        ):
     """
-    指定されたファイルまたはディレクトリからドキュメント類を読み込み、LanceDBを初期化する
+    Read documents from target directory.
     """
-    db = lancedb.connect("./.lancedb")
-    db.create_table(table_name, schema=MySchema, data=data_generator(path_list), mode="overwrite")
+    db = lancedb.connect(db_path)
+    db.create_table(table_name, schema=MySchema, data=data_generator(path_list), mode="overwrite",)
+
+def parse_args():
+    parser = argparse.ArgumentParser(description="init database")
+    parser.add_argument(
+        "--doc_dir",
+        help="document directory path(s)",
+        nargs="+",
+        required=True
+    )
+
+    args = parser.parse_args()
+    targets = [str(Path(p).resolve()) for p in args.doc_dir]
+    
+    return (targets)
 
 def main():
-    targets = [] 
+    (targets) = parse_args()
     init_db(targets)
 
 if __name__ == "__main__":
