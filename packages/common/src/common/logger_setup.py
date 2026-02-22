@@ -1,8 +1,10 @@
 import logging
 import sys
 
+from common.config import settings
 
-def setup_logging(level=logging.INFO):
+
+def setup_logging(level: int = settings.LOG_LEVEL):
     handler = logging.StreamHandler(sys.stdout)
     formatter = logging.Formatter("[%(asctime)s] %(levelname)s - %(message)s")
     handler.setFormatter(formatter)

@@ -1,6 +1,8 @@
 import logging
 import threading
 
+from common.config import settings
+
 import lancedb
 
 logger = logging.getLogger(__name__)
@@ -11,7 +13,7 @@ class LanceDBManager:
     _db = None
     _lock = threading.Lock()
 
-    def __new__(cls, db_uri: str = "data/lancedb"):
+    def __new__(cls, db_uri: str = settings.DB_PATH):
         if cls._instance is None:
             with cls._lock:
                 if cls._instance is None:

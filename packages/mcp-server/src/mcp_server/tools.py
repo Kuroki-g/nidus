@@ -1,8 +1,8 @@
-from init_scripts.main import TABLE_NAME
 from mcp.server import FastMCP
 from common.lance_db_manager import LanceDBManager
 import numpy as np
 import pyarrow as pa  # noqa: F401 This cannot be removed (# https://github.com/lancedb/lancedb/issues/2384)
+from common.config import settings
 
 from common.model import EmbeddingModelManager
 
@@ -13,7 +13,7 @@ def search_docs(keyword: str) -> str:
     """
     db = LanceDBManager().db
     try:
-        table = db.open_table(TABLE_NAME)
+        table = db.open_table(settings.TABLE_NAME)
         # 1. まずは全文検索 (FTS) で「ズバリその言葉」が入っているものを探す
         fts_results = table.search(keyword, query_type="fts").limit(3).to_list()
 

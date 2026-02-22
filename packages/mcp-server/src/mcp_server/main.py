@@ -1,13 +1,13 @@
 from mcp.server.fastmcp import FastMCP
 from common.lance_db_manager import LanceDBManager
 from . import tools, resources, prompts
-
-DB_PATH = "./.lancedb"
-TABLE_NAME = "docs"
+from common.config import settings
 
 
 def main():
-    mcp = FastMCP("NidusMCP", json_response=True)
+    mcp = FastMCP(
+        "NidusMCP", json_response=True, host=settings.HOST, port=settings.PORT
+    )
 
     # Register all tools, resources, prompts
     tools.register_tools(mcp)
@@ -15,7 +15,7 @@ def main():
     prompts.register_prompts(mcp)
 
     # init db connection
-    LanceDBManager(DB_PATH)
+    LanceDBManager()
 
     try:
         mcp.run(transport="streamable-http")
