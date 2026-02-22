@@ -7,8 +7,8 @@ from typing import Callable, Iterable, List, Optional, Union
 
 
 from common.model import EmbeddingModelManager
-from init_scripts.processor.markdown_processor import chunk_markdown
-from init_scripts.processor.pdf_processor import chunk_pdf
+from cli.processor.markdown_processor import chunk_markdown
+from cli.processor.pdf_processor import chunk_pdf
 import numpy as np
 
 model = EmbeddingModelManager()

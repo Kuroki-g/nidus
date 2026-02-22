@@ -3,7 +3,7 @@ import logging
 from pathlib import Path
 from common.logger_setup import setup_logging
 from common.model import EmbeddingModelManager
-from init_scripts.processor.file_processor import data_generator
+from cli.processor.file_processor import data_generator
 import pyarrow as pa  # https://github.com/lancedb/lancedb/issues/2384
 from typing import List, Union
 
