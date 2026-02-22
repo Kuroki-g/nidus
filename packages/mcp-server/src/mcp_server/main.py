@@ -3,7 +3,7 @@ from mcp_server.lance_db_manager import LanceDBManager
 from . import tools, resources, prompts
 
 DB_PATH = "./.lancedb"
-
+TABLE_NAME = "docs"
 
 def main():
     mcp = FastMCP("NidusMCP", json_response=True)
