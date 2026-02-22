@@ -1,7 +1,8 @@
 import os
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import Annotated, Iterable, List, Optional, Union
 from sentence_transformers import SentenceTransformer
+from lancedb.pydantic import Vector, LanceModel
 
 import lancedb
 
@@ -34,43 +35,64 @@ def get_chunk(file_path: Path) -> Optional[List[str]]:
         print("TODO: implement pdf, txt parse")
         return None
 
-def init_db(path_list: List[Union[str, Path]], table_name: str = "markdown_docs"):
+class FileMetadata(LanceModel):
+    source: str
+    chunk_id: int
+
+class MySchema(LanceModel):
+    vector: Annotated[Vector, 1536]
+    text: str
+    metadata: FileMetadata
+
+def data_generator(path_list: List[Union[str, Path]], batch_size: int = 1000) -> Iterable[List[dict]]:
+    """TODO: refactoring"""
+    buffer = []
+    
+    for p in path_list:
+        path_obj = Path(p)
+        targets = path_obj.rglob("*") if path_obj.is_dir() else [path_obj]
+
+        for file_path in targets:
+            chunks = get_chunk(file_path)
+            if not chunks:
+                print(f"[Skip] No content or not supported: {file_path}")
+                continue
+
+            print(f"Processing: {file_path} ({len(chunks)} chunks)")
+            
+            for i, chunk in enumerate(chunks):
+                try:
+                    # スキーマに合わせてデータを構築
+                    record = MySchema(
+                        vector=get_embedding(chunk),
+                        text=chunk,
+                        metadata=FileMetadata(
+                            source=str(file_path.absolute()),
+                            chunk_id=i
+                        )
+                    )
+                    # LanceDBには辞書形式で渡すのが効率的（内部でArrowに変換されるため）
+                    buffer.append(record.dict())
+                    
+                    # 指定したバッチサイズに達したら yield
+                    if len(buffer) >= batch_size:
+                        yield buffer
+                        buffer = []
+                        
+                except Exception as e:
+                    print(f"[Error] Failed to process chunk {i} in {file_path}: {e}")
+    if buffer:
+        yield buffer
+
+def init_db(path_list: List[Union[str, Path]], table_name: str = "docs"):
     """
     指定されたファイルまたはディレクトリからドキュメント類を読み込み、LanceDBを初期化する
     """
     db = lancedb.connect("./.lancedb")
-    
-    all_data = []
-    for p in path_list:
-        path_obj = Path(p)
-        targets = path_obj.rglob("*.md") if path_obj.is_dir() else [path_obj]
-        
-        for file_path in targets:
-            chunks = get_chunk(file_path)
-            if chunks is None:
-                print(f"[Skip] Not supported format: {file_path}.")
-            print(f"Indexing: {file_path}")
-            
-            for i, chunk in enumerate(chunks):
-                all_data.append({
-                    "vector": get_embedding(chunk),
-                    "text": chunk,
-                    "metadata": {
-                        "source": str(file_path.absolute()),
-                        "chunk_id": i
-                    }
-                })
-
-    if all_data:
-        table = db.create_table(table_name, data=all_data, mode="overwrite")
-        print(f"Total: {len(all_data)} chunks indexed.")
-        return table
-    
-    print("No data found.")
-    return None
+    db.create_table(table_name, schema=MySchema, data=data_generator(path_list), mode="overwrite")
 
 def main():
-    targets = ["./docs", "README.md"] 
+    targets = [] 
     init_db(targets)
 
 if __name__ == "__main__":
