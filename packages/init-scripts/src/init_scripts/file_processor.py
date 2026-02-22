@@ -4,6 +4,7 @@ from typing import Callable, Iterable, List, Optional, Union
 
 from common.model import EmbeddingModelManager
 import numpy as np
+from pypdf import PdfReader
 
 model = EmbeddingModelManager()
 
@@ -29,14 +30,31 @@ def chunk_plain_text(path: Path, chunk_size=500):
 
 
 def chunk_pdf(path: Path, chunk_size=500):
-    raise NotImplementedError()
+    if not path.exists():
+        raise FileNotFoundError(f"File not found: {path}")
+
+    reader = PdfReader(path)
+    full_text = ""
+    for page in reader.pages:
+        text = page.extract_text()
+        if text:
+            full_text += text + "\n"
+
+    cleaned_text = " ".join(full_text.split())
+
+    chunks = [
+        cleaned_text[i : i + chunk_size]
+        for i in range(0, len(cleaned_text), chunk_size)
+    ]
+
+    return chunks
 
 
 CHUNK_STRATEGIES: dict[str, Callable[[Path], List[str]]] = {
     ".md": lambda path: chunk_markdown(path),
     ".adoc": lambda path: chunk_asciidoc(path),
     ".txt": lambda path: chunk_plain_text(path),
-    ".pdf": chunk_pdf,  # PDFだけはPathオブジェクトを直接渡す
+    ".pdf": lambda path: chunk_pdf(path),
 }
 
 
@@ -64,10 +82,16 @@ def data_generator(
     buffer = []
 
     for p in path_list:
-        path_obj = Path(p)
-        targets = path_obj.rglob("*") if path_obj.is_dir() else [path_obj]
+        path_obj = Path(p).resolve()
+        if path_obj.is_file():
+            targets = [path_obj]
+        else:
+            targets = (f for f in path_obj.rglob("*") if f.is_file())
 
         for file_path in targets:
+            if file_path.is_dir():
+                continue
+
             chunks = get_chunks(file_path)
             if not chunks:
                 print(f"[Skip] No content or not supported: {file_path}")
