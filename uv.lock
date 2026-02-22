@@ -116,6 +116,12 @@ wheels = [
 name = "common"
 version = "0.1.0"
 source = { editable = "packages/common" }
+dependencies = [
+    { name = "pydantic-settings" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "pydantic-settings", specifier = ">=2.13.1" }]
 
 [[package]]
 name = "cryptography"
