@@ -38,13 +38,14 @@ def init_db(
         ]
     )
 
-    db.create_table(
+    table = db.create_table(
         table_name,
         schema=schema,
         data=data_generator(path_list),
         mode="overwrite",
     )
-
+    table.create_fts_index("text", replace=True)
+    logger.info(f"Database initialized and FTS index created for table: {table_name}")
 
 def parse_args():
     parser = argparse.ArgumentParser(description="init database")
