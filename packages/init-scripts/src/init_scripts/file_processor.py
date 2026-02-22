@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Iterable, List, Optional, Union
+from typing import Callable, Iterable, List, Optional, Union
 
 
 from common.model import EmbeddingModelManager
@@ -12,23 +12,48 @@ def get_embedding(text):
     return model.model.encode(text).astype(np.float32)
 
 
-def load_and_chunk_md(file_path: Path, chunk_size=500):
-    with open(file_path, "r", encoding="utf-8") as f:
-        content = f.read()
-
+def chunk_markdown(path: Path, chunk_size=500):
+    content = path.read_text(encoding="utf-8")
     # NOTE: 簡易的な文字数分割
     # セクション単位などにブラッシュアップしたいところ
     chunks = [content[i : i + chunk_size] for i in range(0, len(content), chunk_size)]
     return chunks
 
 
-def get_chunk(file_path: Path) -> Optional[List[str]]:
+def chunk_asciidoc(path: Path, chunk_size=500):
+    raise NotImplementedError()
+
+
+def chunk_plain_text(path: Path, chunk_size=500):
+    raise NotImplementedError()
+
+
+def chunk_pdf(path: Path, chunk_size=500):
+    raise NotImplementedError()
+
+
+CHUNK_STRATEGIES: dict[str, Callable[[Path], List[str]]] = {
+    ".md": lambda path: chunk_markdown(path),
+    ".adoc": lambda path: chunk_asciidoc(path),
+    ".txt": lambda path: chunk_plain_text(path),
+    ".pdf": chunk_pdf,  # PDFだけはPathオブジェクトを直接渡す
+}
+
+
+def get_chunks(file_path: Path) -> Optional[List[str]]:
     if not file_path.is_file():
         return None
-    if file_path.suffix == ".md":
-        return load_and_chunk_md(file_path)
-    else:
-        print("TODO: implement pdf, txt parse")
+
+    strategy = CHUNK_STRATEGIES.get(file_path.suffix.lower())
+
+    if not strategy:
+        print(f"Unsupported file type: {file_path.suffix}")
+        return None
+
+    try:
+        return strategy(file_path)
+    except Exception as e:
+        print(f"Error processing {file_path}: {e}")
         return None
 
 
@@ -43,7 +68,7 @@ def data_generator(
         targets = path_obj.rglob("*") if path_obj.is_dir() else [path_obj]
 
         for file_path in targets:
-            chunks = get_chunk(file_path)
+            chunks = get_chunks(file_path)
             if not chunks:
                 print(f"[Skip] No content or not supported: {file_path}")
                 continue
