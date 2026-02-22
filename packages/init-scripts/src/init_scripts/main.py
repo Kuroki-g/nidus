@@ -1,16 +1,11 @@
 import argparse
 import os
 from pathlib import Path
+import numpy as np
 import pyarrow as pa  # https://github.com/lancedb/lancedb/issues/2384
-from typing import Annotated, Iterable, List, Optional, Union, Type
+from typing import Iterable, List, Optional, Union
 from sentence_transformers import SentenceTransformer
-from lancedb.pydantic import Vector, LanceModel
 
-try:
-    from pyarrow.lib import FixedSizeListMixin
-except ImportError:
-    # 環境によって場所が異なる場合があるためのガード
-    FixedSizeListMixin = object
 import lancedb
 
 # Offline not to access hagging face by mistake
@@ -22,8 +17,10 @@ model_name = "hotchpotch/static-embedding-japanese"
 model = SentenceTransformer(model_name, local_files_only=True)
 MODEL_VECTOR_SIZE = 1024
 
+TABLE_NAME = "docs"
+
 def get_embedding(text):
-    return model.encode(text).tolist()
+    return model.encode(text).astype(np.float32)
 
 
 def load_and_chunk_md(file_path: Path, chunk_size=500):
@@ -44,19 +41,6 @@ def get_chunk(file_path: Path) -> Optional[List[str]]:
     else:
         print("TODO: implement pdf, txt parse")
         return None
-
-
-class FileMetadata(LanceModel):
-    source: str
-    chunk_id: int
-
-
-class MySchema(LanceModel):
-    model_config = {"arbitrary_types_allowed": True}
-    vector: Annotated[list[float], Vector(MODEL_VECTOR_SIZE)]
-    text: str
-    metadata: FileMetadata
-
 
 def data_generator(
     path_list: List[Union[str, Path]], batch_size: int = 1000
@@ -79,15 +63,16 @@ def data_generator(
             for i, chunk in enumerate(chunks):
                 try:
                     # スキーマに合わせてデータを構築
-                    record = MySchema(
-                        vector=get_embedding(chunk),
-                        text=chunk,
-                        metadata=FileMetadata(
-                            source=str(file_path.absolute()), chunk_id=i
-                        ),
-                    )
-                    # LanceDBには辞書形式で渡すのが効率的（内部でArrowに変換されるため）
-                    buffer.append(record.dict())
+                    vector_data = get_embedding(chunk)
+                    record = {
+                        "vector": vector_data,
+                        "text": chunk,
+                        "metadata": {
+                            "source": str(file_path.absolute()),
+                            "chunk_id": i
+                        }
+                    }
+                    buffer.append(record)
 
                     # 指定したバッチサイズに達したら yield
                     if len(buffer) >= batch_size:
@@ -101,15 +86,23 @@ def data_generator(
 
 
 def init_db(
-    path_list: List[Union[str, Path]], table_name: str = "docs", db_path="./.lancedb"
+    path_list: List[Union[str, Path]], table_name: str = TABLE_NAME, db_path="./.lancedb"
 ):
     """
     Read documents from target directory.
     """
     db = lancedb.connect(db_path)
+    schema = pa.schema([
+        pa.field("vector", pa.list_(pa.float32(), MODEL_VECTOR_SIZE)),
+        pa.field("text", pa.string()),
+        pa.field("metadata", pa.struct([
+            pa.field("source", pa.string()),
+            pa.field("chunk_id", pa.int64()),
+        ]))
+    ])
     db.create_table(
         table_name,
-        schema=MySchema,
+        schema=schema,
         data=data_generator(path_list),
         mode="overwrite",
     )
