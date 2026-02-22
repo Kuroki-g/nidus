@@ -1,6 +1,21 @@
+import logging
+from pathlib import Path
+from typing import List
+
 from mcp.server import FastMCP
 
 from cli.db.search_db import search_docs_in_db, SearchMethod
+from cli.db.update_db import update_files_in_db
+
+logger = logging.getLogger(__name__)
+
+
+def update_docs(path_list: List[Path]) -> None:
+    try:
+        update_files_in_db(path_list)
+    except Exception as e:
+        logger.error(e)
+        return f"failed to update documents information: {str(e)}"
 
 
 def search_docs(keyword: str) -> str:
@@ -47,3 +62,4 @@ def search_docs(keyword: str) -> str:
 
 def register_tools(mcp: FastMCP):
     mcp.tool()(search_docs)
+    mcp.tool()(update_docs)
