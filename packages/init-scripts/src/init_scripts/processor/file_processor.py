@@ -5,6 +5,7 @@ from typing import Callable, Iterable, List, Optional, Union
 
 from common.model import EmbeddingModelManager
 from init_scripts.processor.markdown_processor import chunk_markdown
+from init_scripts.processor.pdf_processor import chunk_pdf
 import numpy as np
 from pypdf import PdfReader
 
@@ -23,26 +24,6 @@ def chunk_asciidoc(path: Path, chunk_size=500):
 def chunk_plain_text(path: Path, chunk_size=500):
     raise NotImplementedError()
 
-
-def chunk_pdf(path: Path, chunk_size=500):
-    if not path.exists():
-        raise FileNotFoundError(f"File not found: {path}")
-
-    reader = PdfReader(path)
-    full_text = ""
-    for page in reader.pages:
-        text = page.extract_text()
-        if text:
-            full_text += text + "\n"
-
-    cleaned_text = " ".join(full_text.split())
-
-    chunks = [
-        cleaned_text[i : i + chunk_size]
-        for i in range(0, len(cleaned_text), chunk_size)
-    ]
-
-    return chunks
 
 
 CHUNK_STRATEGIES: dict[str, Callable[[Path], List[str]]] = {
