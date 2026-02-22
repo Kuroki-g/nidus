@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 from typing import Callable, Iterable, List, Optional, Union
 
@@ -7,6 +8,7 @@ import numpy as np
 from pypdf import PdfReader
 
 model = EmbeddingModelManager()
+logger = logging.getLogger(__name__)
 
 
 def get_embedding(text):
@@ -65,13 +67,13 @@ def get_chunks(file_path: Path) -> Optional[List[str]]:
     strategy = CHUNK_STRATEGIES.get(file_path.suffix.lower())
 
     if not strategy:
-        print(f"Unsupported file type: {file_path.suffix}")
+        logger.warning(f"Unsupported file type: {file_path.suffix}")
         return None
 
     try:
         return strategy(file_path)
     except Exception as e:
-        print(f"Error processing {file_path}: {e}")
+        logger.critical(f"Error processing {file_path}: {e}")
         return None
 
 
@@ -94,10 +96,10 @@ def data_generator(
 
             chunks = get_chunks(file_path)
             if not chunks:
-                print(f"[Skip] No content or not supported: {file_path}")
+                logger.warning(f"[Skip] No content or not supported: {file_path}")
                 continue
 
-            print(f"Processing: {file_path} ({len(chunks)} chunks)")
+            logger.info(f"Processing: {file_path} ({len(chunks)} chunks)")
 
             for i, chunk in enumerate(chunks):
                 try:
@@ -119,6 +121,8 @@ def data_generator(
                         buffer = []
 
                 except Exception as e:
-                    print(f"[Error] Failed to process chunk {i} in {file_path}: {e}")
+                    logger.critical(
+                        f"[Error] Failed to process chunk {i} in {file_path}: {e}"
+                    )
     if buffer:
         yield buffer

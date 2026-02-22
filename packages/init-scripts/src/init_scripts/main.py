@@ -1,5 +1,7 @@
 import argparse
+import logging
 from pathlib import Path
+from common.logger_setup import setup_logging
 from common.model import EmbeddingModelManager
 from init_scripts.file_processor import data_generator
 import pyarrow as pa  # https://github.com/lancedb/lancedb/issues/2384
@@ -35,6 +37,7 @@ def init_db(
             ),
         ]
     )
+
     db.create_table(
         table_name,
         schema=schema,
@@ -55,10 +58,14 @@ def parse_args():
     return targets
 
 
+setup_logging(level="INFO")
+logger = logging.getLogger(__name__)
+
+
 def main():
     (targets) = parse_args()
     if len(targets) == 0:
-        print("Document list is empty.")
+        logger.warning("Document list is empty.")
         return
     init_db(targets)
 

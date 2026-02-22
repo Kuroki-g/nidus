@@ -1,6 +1,9 @@
+import logging
 import threading
 
 import lancedb
+
+logger = logging.getLogger(__name__)
 
 
 class LanceDBManager:
@@ -14,7 +17,7 @@ class LanceDBManager:
                 if cls._instance is None:
                     cls._instance = super(LanceDBManager, cls).__new__(cls)
                     cls._instance._db = lancedb.connect(db_uri)
-                    print(f"Connected to LanceDB at: {db_uri}")
+                    logger.info(f"Connected to LanceDB at: {db_uri}")
         return cls._instance
 
     @property
@@ -24,4 +27,4 @@ class LanceDBManager:
 
 def get_db():
     manager = LanceDBManager()
-    print(f"Thread {threading.current_thread().name}: {id(manager)}")
+    logger.info(f"Thread {threading.current_thread().name}: {id(manager)}")
