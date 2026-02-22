@@ -9,10 +9,15 @@ dependencies = [
     "mistune>=3.2.0",
     "pypdf>=6.7.1",
     "pdfminer-six>=20260107",
+    "click>=8.3.1",
 ]
 
 [project.scripts]
-init = "init_scripts:main"
+nidus = "cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [tool.uv.sources]
 common = { workspace = true }

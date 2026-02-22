@@ -1,22 +1,22 @@
-import argparse
 import logging
 from pathlib import Path
+import click
 from common.logger_setup import setup_logging
 from common.model import EmbeddingModelManager
+from common.config import settings
 from cli.processor.file_processor import data_generator
 import pyarrow as pa  # https://github.com/lancedb/lancedb/issues/2384
 from typing import List, Union
 
 from common.lance_db_manager import LanceDBManager
 
-TABLE_NAME = "docs"
 model = EmbeddingModelManager()
 
 
 def init_db(
     path_list: List[Union[str, Path]],
-    table_name: str = TABLE_NAME,
-    db_path="./.lancedb",
+    table_name: str = settings.TABLE_NAME,
+    db_path=settings.DB_PATH,
 ):
     """
     Read documents from target directory.
@@ -48,28 +48,36 @@ def init_db(
     logger.info(f"Database initialized and FTS index created for table: {table_name}")
 
 
-def parse_args():
-    parser = argparse.ArgumentParser(description="init database")
-    parser.add_argument(
-        "--doc_dir", help="document directory path(s)", nargs="+", required=True
-    )
-
-    args = parser.parse_args()
-    targets = [str(Path(p).resolve()) for p in args.doc_dir]
-
-    return targets
-
-
 setup_logging(level="INFO")
 logger = logging.getLogger(__name__)
 
 
-def main():
-    (targets) = parse_args()
+@click.group()
+def cli():
+    """Nidus CLI - Document MCP server CLI"""
+    pass
+
+
+@cli.command()
+@click.option(
+    "--doc_dir",
+    help="document directory path(s)",
+    multiple=True,
+    required=True,
+    type=click.Path(exists=True, file_okay=False, dir_okay=True),
+)
+def init(doc_dir):
+    """init database"""
+    targets = [str(Path(p).resolve()) for p in doc_dir]
     if len(targets) == 0:
         logger.warning("Document list is empty.")
         return
+
     init_db(targets)
+
+
+def main():
+    cli()
 
 
 if __name__ == "__main__":

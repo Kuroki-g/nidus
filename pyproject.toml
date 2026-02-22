@@ -18,11 +18,7 @@ dependencies = [
 package = false
 
 [tool.uv.workspace]
-members = [
-    "packages/mcp-server",
-    "packages/common",
-    "packages/cli",
-]
+members = ["packages/*"]
 
 [dependency-groups]
 dev = [
@@ -34,10 +30,6 @@ dev = [
 [[tool.uv.index]]
 name = "pytorch"
 url = "https://download.pytorch.org/whl/cpu"
-
-[project.scripts]
-serve = "mcp_server.main:main"
-init = "init_scripts:main"
 
 [tool.uv.sources]
 torch = { index = "pytorch" }
