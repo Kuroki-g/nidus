@@ -2,6 +2,7 @@ import threading
 
 import lancedb
 
+
 class LanceDBManager:
     _instance = None
     _db = None
@@ -19,6 +20,7 @@ class LanceDBManager:
     @property
     def db(self) -> lancedb.DBConnection:
         return self._db
+
 
 def get_db():
     manager = LanceDBManager()

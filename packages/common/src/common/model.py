@@ -8,6 +8,7 @@ os.environ["HF_DATASETS_OFFLINE"] = "1"
 DEFAULT_MODEL_NAME = "hotchpotch/static-embedding-japanese"
 MODEL_VECTOR_SIZE = 1024
 
+
 class EmbeddingModelManager:
     _instance = None
     _model = None

@@ -5,6 +5,7 @@ from . import tools, resources, prompts
 DB_PATH = "./.lancedb"
 TABLE_NAME = "docs"
 
+
 def main():
     mcp = FastMCP("NidusMCP", json_response=True)
 

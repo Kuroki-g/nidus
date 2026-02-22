@@ -7,7 +7,8 @@ import numpy as np
 from sentence_transformers import SentenceTransformer
 import pyarrow as pa
 
-from packages.common.src.model import EmbeddingModelManager  
+from packages.common.src.model import EmbeddingModelManager
+
 
 def search_docs(keyword: str) -> str:
     """
@@ -20,9 +21,7 @@ def search_docs(keyword: str) -> str:
         raw_embedding = model.encode(keyword)
         query_embed = raw_embedding.astype(np.float32)
         results = (
-            table.search(query_embed, vector_column_name="vector")
-            .limit(5)
-            .to_list()
+            table.search(query_embed, vector_column_name="vector").limit(5).to_list()
         )
 
         if len(results) == 0:
@@ -32,15 +31,16 @@ def search_docs(keyword: str) -> str:
         for row in results:
             # row は辞書型なので、そのままキーでアクセス可能
             # row['metadata'] は初期化時の構造（dict）のまま入っています
-            metadata = row.get('metadata', {})
-            source = metadata.get('source', 'unknown')
-            text_snippet = row.get('text', '')[:200]
-            
+            metadata = row.get("metadata", {})
+            source = metadata.get("source", "unknown")
+            text_snippet = row.get("text", "")[:200]
+
             output.append(f"--- source: {source} ---\n{text_snippet}\n")
-                
+
         return "\n".join(output)
     except Exception as e:
         return f"検索エラーが発生しました: {str(e)}"
+
 
 def register_tools(mcp: FastMCP):
     mcp.tool()(search_docs)

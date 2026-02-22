@@ -4,7 +4,6 @@ import numpy as np
 import pyarrow as pa  # https://github.com/lancedb/lancedb/issues/2384
 from typing import Iterable, List, Optional, Union
 
-import lancedb
 
 from common.model import EmbeddingModelManager
 from common.lance_db_manager import LanceDBManager
@@ -12,6 +11,7 @@ from common.lance_db_manager import LanceDBManager
 model = EmbeddingModelManager()
 
 TABLE_NAME = "docs"
+
 
 def get_embedding(text):
     return model.model.encode(text).astype(np.float32)
@@ -35,6 +35,7 @@ def get_chunk(file_path: Path) -> Optional[List[str]]:
     else:
         print("TODO: implement pdf, txt parse")
         return None
+
 
 def data_generator(
     path_list: List[Union[str, Path]], batch_size: int = 1000
@@ -63,8 +64,8 @@ def data_generator(
                         "text": chunk,
                         "metadata": {
                             "source": str(file_path.absolute()),
-                            "chunk_id": i
-                        }
+                            "chunk_id": i,
+                        },
                     }
                     buffer.append(record)
 
@@ -80,20 +81,29 @@ def data_generator(
 
 
 def init_db(
-    path_list: List[Union[str, Path]], table_name: str = TABLE_NAME, db_path="./.lancedb"
+    path_list: List[Union[str, Path]],
+    table_name: str = TABLE_NAME,
+    db_path="./.lancedb",
 ):
     """
     Read documents from target directory.
     """
     db = LanceDBManager(db_path).db
-    schema = pa.schema([
-        pa.field("vector", pa.list_(pa.float32(), model.vector_size)),
-        pa.field("text", pa.string()),
-        pa.field("metadata", pa.struct([
-            pa.field("source", pa.string()),
-            pa.field("chunk_id", pa.int64()),
-        ]))
-    ])
+    schema = pa.schema(
+        [
+            pa.field("vector", pa.list_(pa.float32(), model.vector_size)),
+            pa.field("text", pa.string()),
+            pa.field(
+                "metadata",
+                pa.struct(
+                    [
+                        pa.field("source", pa.string()),
+                        pa.field("chunk_id", pa.int64()),
+                    ]
+                ),
+            ),
+        ]
+    )
     db.create_table(
         table_name,
         schema=schema,
