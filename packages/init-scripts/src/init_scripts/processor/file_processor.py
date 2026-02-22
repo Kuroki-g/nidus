@@ -8,15 +8,18 @@ from typing import Callable, Iterable, List, Optional, Union
 
 from common.model import EmbeddingModelManager
 from init_scripts.processor.markdown_processor import chunk_markdown
-from init_scripts.processor.pdf_processor import chunk_pdf_by_pdfminer
+from init_scripts.processor.pdf_processor import chunk_pdf
 import numpy as np
 
 model = EmbeddingModelManager()
 logger = logging.getLogger(__name__)
 logging.getLogger("pdfminer").setLevel(logging.ERROR)
 
+
 def get_embedding(text):
-    return model.model.encode(text).astype(np.float32)
+    return model.model.encode(
+        text, show_progress_bar=False, convert_to_numpy=True
+    ).astype(np.float32)
 
 
 def chunk_asciidoc(path: Path, chunk_size=500):
@@ -31,7 +34,7 @@ CHUNK_STRATEGIES: dict[str, Callable[[Path], List[str]]] = {
     ".md": lambda path: chunk_markdown(path),
     ".adoc": lambda path: chunk_asciidoc(path),
     ".txt": lambda path: chunk_plain_text(path),
-    ".pdf": lambda path: chunk_pdf_by_pdfminer(path),
+    ".pdf": lambda path: chunk_pdf(path),
 }
 
 
@@ -102,18 +105,24 @@ def data_generator(
     if buffer:
         yield buffer
 
+
 def data_generator_multiprocessing(
     path_list: List[Union[str, Path]], batch_size: int = 64
 ) -> Iterable[List[dict]]:
+    """
+    NOTE: 実装をしてみたはものの早くならないので未使用
+    """
     all_files = []
     for p in path_list:
         path_obj = Path(p).resolve()
         targets = [path_obj] if path_obj.is_file() else path_obj.rglob("*")
-        all_files.extend([f for f in targets if f.is_file() and f.suffix.lower() in CHUNK_STRATEGIES])
+        all_files.extend(
+            [f for f in targets if f.is_file() and f.suffix.lower() in CHUNK_STRATEGIES]
+        )
 
     pending_items = []
     max_workers = min(os.cpu_count(), len(all_files)) if all_files else 1
-    ctx = multiprocessing.get_context('spawn')
+    ctx = multiprocessing.get_context("spawn")
 
     with ProcessPoolExecutor(max_workers=max_workers, mp_context=ctx) as executor:
         for file_path, chunks in zip(all_files, executor.map(get_chunks, all_files)):
@@ -123,11 +132,9 @@ def data_generator_multiprocessing(
             logger.info(f"Parsed: {file_path} ({len(chunks)} chunks)")
 
             for i, chunk in enumerate(chunks):
-                pending_items.append({
-                    "text": chunk,
-                    "source": str(file_path.absolute()),
-                    "chunk_id": i
-                })
+                pending_items.append(
+                    {"text": chunk, "source": str(file_path.absolute()), "chunk_id": i}
+                )
 
                 if len(pending_items) >= batch_size:
                     yield _flush_batch(pending_items)
@@ -136,19 +143,24 @@ def data_generator_multiprocessing(
     if pending_items:
         yield _flush_batch(pending_items)
 
+
 def _flush_batch(items: List[dict]) -> List[dict]:
     """溜まったアイテムをまとめてベクトル化する"""
     texts = [item["text"] for item in items]
-    vectors = model.model.encode(texts).astype(np.float32)
-    
+    vectors = model.model.encode(
+        texts, show_progress_bar=False, convert_to_numpy=True
+    ).astype(np.float32)
+
     records = []
     for item, vector in zip(items, vectors):
-        records.append({
-            "vector": vector,
-            "text": item["text"],
-            "metadata": {
-                "source": item["source"],
-                "chunk_id": item["chunk_id"],
-            },
-        })
+        records.append(
+            {
+                "vector": vector,
+                "text": item["text"],
+                "metadata": {
+                    "source": item["source"],
+                    "chunk_id": item["chunk_id"],
+                },
+            }
+        )
     return records
