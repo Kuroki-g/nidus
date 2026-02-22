@@ -1,5 +1,3 @@
-import os
-
 from init_scripts.main import TABLE_NAME
 from mcp.server import FastMCP
 from common.lance_db_manager import LanceDBManager
@@ -17,7 +15,7 @@ def search_docs(keyword: str) -> str:
     try:
         table = db.open_table(TABLE_NAME)
         model = EmbeddingModelManager().model
-        raw_embedding = model.encode(keyword)
+        raw_embedding = model.encode(keyword, show_progress_bar=False)
         query_embed = raw_embedding.astype(np.float32)
         results = (
             table.search(query_embed, vector_column_name="vector").limit(5).to_list()
