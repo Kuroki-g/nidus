@@ -3,6 +3,7 @@ from pathlib import Path
 from pathlib import Path
 from pdfminer.high_level import extract_text
 
+
 def chunk_pdf_by_pdfminer(path: Path, chunk_size=500):
     if not path.exists():
         raise FileNotFoundError(f"File not found: {path}")

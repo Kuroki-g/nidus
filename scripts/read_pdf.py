@@ -2,7 +2,8 @@ import argparse
 import logging
 from pathlib import Path
 
-from init_scripts.processor.pdf_processor import chunk_pdf_by_pypdf, chunk_pdf_by_pdfminer
+from init_scripts.processor.pdf_processor import chunk_pdf_by_pdfminer
+
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
 
