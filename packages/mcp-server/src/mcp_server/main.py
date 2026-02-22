@@ -1,6 +1,7 @@
 from mcp.server.fastmcp import FastMCP
 from . import tools, resources, prompts
 
+
 def main():
     mcp = FastMCP("NidusMCP", json_response=True)
 
@@ -13,7 +14,9 @@ def main():
         mcp.run(transport="streamable-http")
     except KeyboardInterrupt:
         import sys
+
         sys.exit(0)
+
 
 if __name__ == "__main__":
     main()

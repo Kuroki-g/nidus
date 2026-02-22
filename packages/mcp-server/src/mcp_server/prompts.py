@@ -1,5 +1,6 @@
 from mcp.server.fastmcp import FastMCP
 
+
 def custom_instruction(name: str, style: str = "friendly") -> str:
     """TODO: Read custom instruction from mounted file"""
     styles = {
@@ -7,8 +8,9 @@ def custom_instruction(name: str, style: str = "friendly") -> str:
         "formal": "Please write a formal, professional greeting",
         "casual": "Please write a casual, relaxed greeting",
     }
-    instruction = styles.get(style, styles['friendly'])
+    instruction = styles.get(style, styles["friendly"])
     return f"{instruction} for someone named {name}."
+
 
 def register_prompts(mcp: FastMCP):
     mcp.prompt()(custom_instruction)
