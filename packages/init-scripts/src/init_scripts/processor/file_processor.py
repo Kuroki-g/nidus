@@ -4,6 +4,7 @@ from typing import Callable, Iterable, List, Optional, Union
 
 
 from common.model import EmbeddingModelManager
+from init_scripts.processor.markdown_processor import chunk_markdown
 import numpy as np
 from pypdf import PdfReader
 
@@ -14,13 +15,6 @@ logger = logging.getLogger(__name__)
 def get_embedding(text):
     return model.model.encode(text).astype(np.float32)
 
-
-def chunk_markdown(path: Path, chunk_size=500):
-    content = path.read_text(encoding="utf-8")
-    # NOTE: 簡易的な文字数分割
-    # セクション単位などにブラッシュアップしたいところ
-    chunks = [content[i : i + chunk_size] for i in range(0, len(content), chunk_size)]
-    return chunks
 
 
 def chunk_asciidoc(path: Path, chunk_size=500):
