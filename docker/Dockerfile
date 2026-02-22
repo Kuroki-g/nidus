@@ -52,6 +52,10 @@ ENV HF_HOME=/app/models \
 
 WORKDIR /app
 
+RUN groupadd -r appuser && useradd -r -g appuser -d /app -s /sbin/nologin appuser && \
+    mkdir -p /app && \
+    chown appuser:appuser /app
+
 COPY --from=builder --chown=appuser:appuser /app/.venv /app/.venv
 COPY --from=builder --chown=appuser:appuser /app/models /app/models
 COPY --from=builder --chown=appuser:appuser /app/packages /app/packages
