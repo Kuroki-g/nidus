@@ -3,8 +3,9 @@ from pathlib import Path
 import click
 from common.logger_setup import setup_logging
 from common.model import EmbeddingModelManager
-from cli.db.update_db import update_files_in_db
 from cli.db.init import init_db
+from cli.db.search_db import display_results_simple, search_docs_in_db
+from cli.db.update_db import update_files_in_db
 
 model = EmbeddingModelManager()
 
@@ -55,6 +56,22 @@ def update(file):
         return
 
     update_files_in_db(valid_paths)
+
+
+@cli.command()
+@click.argument(
+    "keyword",
+    required=True,
+    type=click.STRING,
+)
+def search(keyword):
+    """Search database by keyword"""
+    if not keyword or len(keyword) == 0:
+        logger.warning("keyword is required.")
+        return
+
+    results = search_docs_in_db(keyword)
+    display_results_simple(results)
 
 
 def main():
