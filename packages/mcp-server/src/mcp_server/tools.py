@@ -2,12 +2,11 @@ import os
 
 from init_scripts.main import TABLE_NAME
 from mcp.server import FastMCP
-from packages.common.src.lance_db_manager import LanceDBManager
+from common.lance_db_manager import LanceDBManager
 import numpy as np
-from sentence_transformers import SentenceTransformer
 import pyarrow as pa
 
-from packages.common.src.model import EmbeddingModelManager
+from common.model import EmbeddingModelManager
 
 
 def search_docs(keyword: str) -> str:
