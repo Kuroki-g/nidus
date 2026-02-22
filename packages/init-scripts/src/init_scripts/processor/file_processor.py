@@ -1,4 +1,7 @@
+from concurrent.futures import ProcessPoolExecutor
 import logging
+import multiprocessing
+import os
 from pathlib import Path
 from typing import Callable, Iterable, List, Optional, Union
 
@@ -10,7 +13,7 @@ import numpy as np
 
 model = EmbeddingModelManager()
 logger = logging.getLogger(__name__)
-
+logging.getLogger("pdfminer").setLevel(logging.ERROR)
 
 def get_embedding(text):
     return model.model.encode(text).astype(np.float32)
@@ -50,7 +53,7 @@ def get_chunks(file_path: Path) -> Optional[List[str]]:
 
 
 def data_generator(
-    path_list: List[Union[str, Path]], batch_size: int = 1000
+    path_list: List[Union[str, Path]], batch_size: int = 64
 ) -> Iterable[List[dict]]:
     """TODO: refactoring"""
     buffer = []
@@ -98,3 +101,54 @@ def data_generator(
                     )
     if buffer:
         yield buffer
+
+def data_generator_multiprocessing(
+    path_list: List[Union[str, Path]], batch_size: int = 64
+) -> Iterable[List[dict]]:
+    all_files = []
+    for p in path_list:
+        path_obj = Path(p).resolve()
+        targets = [path_obj] if path_obj.is_file() else path_obj.rglob("*")
+        all_files.extend([f for f in targets if f.is_file() and f.suffix.lower() in CHUNK_STRATEGIES])
+
+    pending_items = []
+    max_workers = min(os.cpu_count(), len(all_files)) if all_files else 1
+    ctx = multiprocessing.get_context('spawn')
+
+    with ProcessPoolExecutor(max_workers=max_workers, mp_context=ctx) as executor:
+        for file_path, chunks in zip(all_files, executor.map(get_chunks, all_files)):
+            if not chunks:
+                continue
+
+            logger.info(f"Parsed: {file_path} ({len(chunks)} chunks)")
+
+            for i, chunk in enumerate(chunks):
+                pending_items.append({
+                    "text": chunk,
+                    "source": str(file_path.absolute()),
+                    "chunk_id": i
+                })
+
+                if len(pending_items) >= batch_size:
+                    yield _flush_batch(pending_items)
+                    pending_items = []
+
+    if pending_items:
+        yield _flush_batch(pending_items)
+
+def _flush_batch(items: List[dict]) -> List[dict]:
+    """溜まったアイテムをまとめてベクトル化する"""
+    texts = [item["text"] for item in items]
+    vectors = model.model.encode(texts).astype(np.float32)
+    
+    records = []
+    for item, vector in zip(items, vectors):
+        records.append({
+            "vector": vector,
+            "text": item["text"],
+            "metadata": {
+                "source": item["source"],
+                "chunk_id": item["chunk_id"],
+            },
+        })
+    return records
