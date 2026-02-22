@@ -48,6 +48,30 @@ def init_db(
     logger.info(f"Database initialized and FTS index created for table: {table_name}")
 
 
+def update_files_in_db(
+    path_list: List[Path],
+    table_name: str = settings.TABLE_NAME,
+    db_path=settings.DB_PATH,
+):
+    """
+    Delete assigned file and update contents.
+    """
+    db = LanceDBManager(db_path).db
+    table = db.open_table(table_name)
+
+    # delete target file record
+    paths_str = ", ".join([f"'{str(p)}'" for p in path_list])
+    delete_query = f"metadata.source IN ({paths_str})"
+    table.delete(delete_query)
+    logger.info(f"Deleted old data for: {paths_str}")
+
+    # add new record
+    table.add(data_generator(path_list))
+    table.create_fts_index("text", replace=True)
+
+    logger.info("Database update and FTS index optimization complete.")
+
+
 setup_logging(level="INFO")
 logger = logging.getLogger(__name__)
 
@@ -74,6 +98,26 @@ def init(doc_dir):
         return
 
     init_db(targets)
+
+
+@cli.command()
+@click.option(
+    "--file",
+    "-f",
+    help="update file(s)",
+    multiple=True,
+    required=True,
+    type=click.Path(exists=True, file_okay=True, dir_okay=False),
+)
+def update(file):
+    """init database"""
+    file_paths = [Path(f).resolve() for f in file]
+    valid_paths = [p for p in file_paths if p.exists()]
+    if not valid_paths:
+        logger.warning("No valid files found to update.")
+        return
+
+    update_files_in_db(valid_paths)
 
 
 def main():
