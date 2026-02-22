@@ -21,6 +21,7 @@ package = false
 members = [
     "packages/mcp-server",
     "packages/init-scripts",
+    "packages/common",
 ]
 
 [dependency-groups]

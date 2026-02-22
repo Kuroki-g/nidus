@@ -7,7 +7,9 @@ authors = [
     { name = "Kuroki-g", email = "64629990+Kuroki-g@users.noreply.github.com" }
 ]
 requires-python = "==3.13.*"
-dependencies = []
+dependencies = [
+    "common",
+]
 
 [project.scripts]
 serve = "mcp_server:main"
@@ -15,3 +17,6 @@ serve = "mcp_server:main"
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.uv.sources]
+common = { workspace = true }

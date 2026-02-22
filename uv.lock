@@ -8,6 +8,7 @@ resolution-markers = [
 
 [manifest]
 members = [
+    "common",
     "init-scripts",
     "mcp-server",
     "nidus-mcp",
@@ -102,6 +103,11 @@ source = { registry = "https://download.pytorch.org/whl/cpu" }
 wheels = [
     { url = "https://download.pytorch.org/whl/colorama-0.4.6-py2.py3-none-any.whl", hash = "sha256:4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6" },
 ]
+
+[[package]]
+name = "common"
+version = "0.1.0"
+source = { editable = "packages/common" }
 
 [[package]]
 name = "cryptography"
@@ -282,6 +288,12 @@ wheels = [
 name = "init-scripts"
 version = "0.1.0"
 source = { editable = "packages/init-scripts" }
+dependencies = [
+    { name = "common" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "common", editable = "packages/common" }]
 
 [[package]]
 name = "jinja2"
@@ -432,6 +444,12 @@ cli = [
 name = "mcp-server"
 version = "0.1.0"
 source = { editable = "packages/mcp-server" }
+dependencies = [
+    { name = "common" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "common", editable = "packages/common" }]
 
 [[package]]
 name = "mdurl"
