@@ -1,26 +1,20 @@
 import argparse
-import os
 from pathlib import Path
 import numpy as np
 import pyarrow as pa  # https://github.com/lancedb/lancedb/issues/2384
 from typing import Iterable, List, Optional, Union
-from sentence_transformers import SentenceTransformer
 
 import lancedb
 
-# Offline not to access hagging face by mistake
-os.environ["TRANSFORMERS_OFFLINE"] = "1"
-os.environ["HF_DATASETS_OFFLINE"] = "1"
+from common.model import EmbeddingModelManager
+from common.lance_db_manager import LanceDBManager
 
-# https://huggingface.co/hotchpotch/static-embedding-japanese
-model_name = "hotchpotch/static-embedding-japanese"
-model = SentenceTransformer(model_name, local_files_only=True)
-MODEL_VECTOR_SIZE = 1024
+model = EmbeddingModelManager()
 
 TABLE_NAME = "docs"
 
 def get_embedding(text):
-    return model.encode(text).astype(np.float32)
+    return model.model.encode(text).astype(np.float32)
 
 
 def load_and_chunk_md(file_path: Path, chunk_size=500):
@@ -91,9 +85,9 @@ def init_db(
     """
     Read documents from target directory.
     """
-    db = lancedb.connect(db_path)
+    db = LanceDBManager(db_path).db
     schema = pa.schema([
-        pa.field("vector", pa.list_(pa.float32(), MODEL_VECTOR_SIZE)),
+        pa.field("vector", pa.list_(pa.float32(), model.vector_size)),
         pa.field("text", pa.string()),
         pa.field("metadata", pa.struct([
             pa.field("source", pa.string()),
@@ -122,6 +116,9 @@ def parse_args():
 
 def main():
     (targets) = parse_args()
+    if len(targets) == 0:
+        print("Document list is empty.")
+        return
     init_db(targets)
 
 

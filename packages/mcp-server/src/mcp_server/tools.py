@@ -5,12 +5,9 @@ from mcp.server import FastMCP
 from packages.common.src.lance_db_manager import LanceDBManager
 import numpy as np
 from sentence_transformers import SentenceTransformer
-import pyarrow as pa 
+import pyarrow as pa
 
-os.environ["TRANSFORMERS_OFFLINE"] = "1"
-model_name = "hotchpotch/static-embedding-japanese"
-# シングルトン内で使い回せるように、ここでモデルをロード（またはManagerに入れる）
-model = SentenceTransformer(model_name, local_files_only=True)
+from packages.common.src.model import EmbeddingModelManager  
 
 def search_docs(keyword: str) -> str:
     """
@@ -19,6 +16,7 @@ def search_docs(keyword: str) -> str:
     db = LanceDBManager().db
     try:
         table = db.open_table(TABLE_NAME)
+        model = EmbeddingModelManager().model
         raw_embedding = model.encode(keyword)
         query_embed = raw_embedding.astype(np.float32)
         results = (
