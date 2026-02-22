@@ -3,5 +3,9 @@
         "fastmcp",
         "lancedb",
         "streamable"
-    ]
+    ],
+    "[python]": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "charliermarsh.ruff"
+    }
 }

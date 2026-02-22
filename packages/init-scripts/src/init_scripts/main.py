@@ -47,6 +47,7 @@ def init_db(
     table.create_fts_index("text", replace=True)
     logger.info(f"Database initialized and FTS index created for table: {table_name}")
 
+
 def parse_args():
     parser = argparse.ArgumentParser(description="init database")
     parser.add_argument(
