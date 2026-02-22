@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from typing import List, Union
+from typing import List, Optional, Union
 from sentence_transformers import SentenceTransformer
 
 import lancedb
@@ -25,6 +25,15 @@ def load_and_chunk_md(file_path: Path, chunk_size=500):
     chunks = [content[i:i + chunk_size] for i in range(0, len(content), chunk_size)]
     return chunks
 
+def get_chunk(file_path: Path) -> Optional[List[str]]:
+    if not file_path.is_file():
+        return None
+    if file_path.suffix == ".md":
+        return load_and_chunk_md(file_path)
+    else:
+        print("TODO: implement pdf, txt parse")
+        return None
+
 def init_db(path_list: List[Union[str, Path]], table_name: str = "markdown_docs"):
     """
     指定されたファイルまたはディレクトリからドキュメント類を読み込み、LanceDBを初期化する
@@ -37,13 +46,9 @@ def init_db(path_list: List[Union[str, Path]], table_name: str = "markdown_docs"
         targets = path_obj.rglob("*.md") if path_obj.is_dir() else [path_obj]
         
         for file_path in targets:
-            if not file_path.is_file():
-                continue
-            if file_path.suffix == ".md":
-                chunks = load_and_chunk_md(file_path)
-            else:
-                print("TODO: implement pdf, txt parse")
-                continue
+            chunks = get_chunk(file_path)
+            if chunks is None:
+                print(f"[Skip] Not supported format: {file_path}.")
             print(f"Indexing: {file_path}")
             
             for i, chunk in enumerate(chunks):
