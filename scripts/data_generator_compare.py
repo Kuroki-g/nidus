@@ -1,7 +1,7 @@
 import logging
 import time
 
-from init_scripts.processor.file_processor import (
+from cli.processor.file_processor import (
     data_generator,
     data_generator_multiprocessing,
 )
