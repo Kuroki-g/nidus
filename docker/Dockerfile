@@ -52,11 +52,10 @@ ENV HF_HOME=/app/models \
 
 WORKDIR /app
 
-COPY --from=builder /app/.venv /app/.venv
-COPY --from=builder /app/models /app/models
-COPY --from=builder /app/packages /app/packages
+COPY --from=builder --chown=appuser:appuser /app/.venv /app/.venv
+COPY --from=builder --chown=appuser:appuser /app/models /app/models
+COPY --from=builder --chown=appuser:appuser /app/packages /app/packages
 
-RUN useradd -m appuser && chown -R appuser:appuser /app
 USER appuser
 
 CMD ["python", "packages/mcp-server/src/mcp_server/main.py"]
