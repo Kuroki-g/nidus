@@ -12,6 +12,7 @@ dependencies = [
     "torch",
     "mcp-server",
     "cli",
+    "pyarrow>=23.0.1",
 ]
 
 [tool.uv]
