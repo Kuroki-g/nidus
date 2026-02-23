@@ -10,7 +10,7 @@ dependencies = [
 ]
 
 [project.scripts]
-serve = "mcp_server:main"
+serve = "mcp-server:main"
 
 [build-system]
 requires = ["hatchling"]

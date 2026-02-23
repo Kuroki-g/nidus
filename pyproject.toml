@@ -15,7 +15,7 @@ dependencies = [
 ]
 
 [tool.uv]
-package = false
+package = true
 
 [tool.uv.workspace]
 members = ["packages/*"]
@@ -32,7 +32,7 @@ include = ["packages*"]
 
 [project.scripts]
 nidus = "cli.main:main"
-nidus-mcp = "nidus_mcp.main:main"
+nidus-mcp = "mcp_server.main:main"
 
 [[tool.uv.index]]
 name = "pytorch"
