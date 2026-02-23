@@ -1,15 +1,14 @@
 from mcp.server.fastmcp import FastMCP
 
 
-def custom_instruction(name: str, style: str = "friendly") -> str:
-    """TODO: Read custom instruction from mounted file"""
-    styles = {
-        "friendly": "Please write a warm, friendly greeting",
-        "formal": "Please write a formal, professional greeting",
-        "casual": "Please write a casual, relaxed greeting",
-    }
-    instruction = styles.get(style, styles["friendly"])
-    return f"{instruction} for someone named {name}."
+def custom_instruction() -> str:
+    """Call instruction for this tool"""
+    instruction = (
+        "NidusMCP is an open-source MCP server that search documents information locally. It provides locally-restricted document search."
+        "for database init, update, search, you can use MCP tools."
+    )
+
+    return f"{instruction}"
 
 
 def register_prompts(mcp: FastMCP):
