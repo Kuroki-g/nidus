@@ -1,4 +1,4 @@
-from init_scripts.processor.markdown_processor import chunk_markdown
+from cli.processor.markdown_processor import chunk_markdown
 
 
 def test_chunk_markdown_basic(tmp_path):

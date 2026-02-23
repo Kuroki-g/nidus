@@ -1,4 +1,4 @@
-from init_scripts.processor.pdf_processor import chunk_pdf_by_pdfminer
+from cli.processor.pdf_processor import chunk_pdf_by_pdfminer
 import pytest
 from pathlib import Path
 
