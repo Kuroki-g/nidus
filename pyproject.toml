@@ -13,6 +13,7 @@ dependencies = [
     "mcp-server",
     "cli",
     "pyarrow>=23.0.1",
+    "platformdirs>=4.9.2",
 ]
 
 [tool.uv]
