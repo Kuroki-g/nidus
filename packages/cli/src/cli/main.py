@@ -83,12 +83,37 @@ def read_pdf(path):
     type=click.Path(exists=True, file_okay=False, dir_okay=True),
 )
 def init(doc_dir):
-    """init database"""
+    """init database and download model if not exist"""
     targets = [str(Path(p).resolve()) for p in doc_dir]
     if len(targets) == 0:
         logger.warning("Document list is empty.")
         return
 
+    logger.info("Initializing model.")
+
+    try:
+        from common.model import EmbeddingModelManager
+
+        EmbeddingModelManager()
+    except OSError as e:
+        logger.warning("failed to import model. download from online.")
+        import os
+        from common.model import DEFAULT_MODEL_NAME
+        from sentence_transformers import (
+            SentenceTransformer,
+        )
+
+        try:
+            os.environ["TRANSFORMERS_OFFLINE"] = "0"
+            os.environ["HF_DATASETS_OFFLINE"] = "0"
+            SentenceTransformer(DEFAULT_MODEL_NAME)
+
+            os.environ["TRANSFORMERS_OFFLINE"] = "1"
+            os.environ["HF_DATASETS_OFFLINE"] = "1"
+        except e:
+            logger.error(e)
+            logger.critical("failed to load model.")
+            exit(1)
     from cli.db.init import init_db
 
     init_db(targets)
