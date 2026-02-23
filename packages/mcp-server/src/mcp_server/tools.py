@@ -60,6 +60,26 @@ def search_docs(keyword: str) -> str:
         return f"検索エラーが発生しました: {str(e)}"
 
 
+def list_docs(keyword: str) -> str:
+    try:
+        from cli.db.search_db import list_docs_in_db
+
+        results = list_docs_in_db(keyword)
+
+        if not results:
+            return f"source match to {keyword}' was not found."
+
+        output = []
+        for row in results:
+            source = row["source"]
+            text_snippet = row.get("text", "").replace("\n", " ")[:300]
+
+            output.append(f"--- source: {source} ---\n{text_snippet}...\n")
+        return "\n".join(output)
+    except Exception as e:
+        return f"検索エラーが発生しました: {str(e)}"
+
+
 def register_tools(mcp: FastMCP):
     mcp.tool()(search_docs)
     mcp.tool()(update_docs)

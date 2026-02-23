@@ -23,6 +23,39 @@ class SearchResult(TypedDict):
     chunk_id: int
 
 
+def list_docs_in_db(keyword: str | None) -> List[SearchResult]:
+    db = LanceDBManager().db
+    try:
+        table = db.open_table(settings.TABLE_NAME)
+        query = (
+            table.search().select(["source", "chunk_id", "text"]).where("chunk_id = 0")
+        )
+        if keyword is not None:
+            query = query.where("source LIKE '%{keyword}%'")
+        results = query.limit(settings.SEARCH_LIMIT * 10).to_list()
+
+        if not results:
+            logger.debug(f"Information to match '{keyword}' was not found.")
+            return []
+
+        return results
+    except Exception as e:
+        logger.critical(e)
+        return []
+
+
+def display_list_results_simple(results: list[SearchResult]):
+    header = f"{'Source':<15} | {'Text'}"
+    print(header)
+    print("-" * 80)
+
+    for res in results:
+        source = res["source"][:13] + ".." if len(res["source"]) > 15 else res["source"]
+        text = res["text"].replace("\n", " ")[:50] + "..."
+
+        print(f"{source:<15} | {text}")
+
+
 def search_docs_in_db(keyword: str) -> List[SearchResult]:
     db = LanceDBManager().db
     try:

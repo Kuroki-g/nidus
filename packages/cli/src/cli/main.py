@@ -162,6 +162,20 @@ def search(keyword):
     display_results_simple(results)
 
 
+@cli.command()
+@click.argument(
+    "keyword",
+    required=False,
+    type=click.STRING,
+)
+def list(keyword):
+    """List document filtered by keyword."""
+    from cli.db.search_db import display_list_results_simple, list_docs_in_db
+
+    results = list_docs_in_db(keyword)
+    display_list_results_simple(results)
+
+
 def main():
     cli()
 
