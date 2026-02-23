@@ -53,11 +53,10 @@ def search_docs_in_db(keyword: str) -> List[SearchResult]:
             if text in seen_texts:
                 continue
             seen_texts.add(text)
-            metadata = row.get("metadata", {})
-            source = metadata.get(
+            source = row.get(
                 "source", "unknown"
             )  # get source else filled with "unknown"
-            chunk_id = metadata.get("chunk_id", "unknown")
+            chunk_id = row.get("chunk_id", "unknown")
 
             # get first 300 words
             text_snippet = text.replace("\n", " ")[:300]

@@ -83,10 +83,8 @@ def data_generator(
                     record = {
                         "vector": vector_data,
                         "text": chunk,
-                        "metadata": {
-                            "source": str(file_path.absolute()),
-                            "chunk_id": i,
-                        },
+                        "source": str(file_path.absolute()),
+                        "chunk_id": i,
                     }
                     buffer.append(record)
 
@@ -154,10 +152,8 @@ def _flush_batch(items: List[dict]) -> List[dict]:
             {
                 "vector": vector,
                 "text": item["text"],
-                "metadata": {
-                    "source": item["source"],
-                    "chunk_id": item["chunk_id"],
-                },
+                "source": item["source"],
+                "chunk_id": item["chunk_id"],
             }
         )
     return records

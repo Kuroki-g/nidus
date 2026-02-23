@@ -25,7 +25,7 @@ def update_files_in_db(
 
     # delete target file record
     paths_str = ", ".join([f"'{str(p)}'" for p in flatten_path_to_file(path_list)])
-    delete_query = f"metadata.source IN ({paths_str})"
+    delete_query = f"source IN ({paths_str})"
     table.delete(delete_query)
     logger.info(f"Deleted old data for: {paths_str}")
 

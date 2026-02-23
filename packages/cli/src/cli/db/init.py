@@ -27,15 +27,8 @@ def init_db(
         [
             pa.field("vector", pa.list_(pa.float32(), model.vector_size)),
             pa.field("text", pa.string()),
-            pa.field(
-                "metadata",
-                pa.struct(
-                    [
-                        pa.field("source", pa.string()),
-                        pa.field("chunk_id", pa.int64()),
-                    ]
-                ),
-            ),
+            pa.field("source", pa.string()),
+            pa.field("chunk_id", pa.int64()),
         ]
     )
 
