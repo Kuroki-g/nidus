@@ -22,7 +22,7 @@ nidus init --doc_dir={YOUR_DOC_DIR}
 Run Nidus Server:
 
 ```bash
-nidus serve
+nidus-mcp
 ```
 
 You tell AI agent CLI by editing your `settings.json`.
@@ -37,7 +37,14 @@ You tell AI agent CLI by editing your `settings.json`.
 }
 ```
 
-#### Use docker compose
+## CLI tool
+
+For database status check, Nidus CLI is available.
+For detail, call `nidus --help`.
+
+## [TODO] Use docker compose
+
+I have a plan but not implemented.
 
 ```yaml
 services:
