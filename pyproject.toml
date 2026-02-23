@@ -30,6 +30,10 @@ dev = [
 [tool.setuptools.packages.find]
 include = ["packages*"]
 
+[project.scripts]
+nidus = "cli.main:main"
+nidus-mcp = "nidus_mcp.main:main"
+
 [[tool.uv.index]]
 name = "pytorch"
 url = "https://download.pytorch.org/whl/cpu"
