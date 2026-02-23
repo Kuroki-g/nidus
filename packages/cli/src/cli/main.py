@@ -35,12 +35,32 @@ def list_tools(url):
 
 @debug.command()
 @click.argument(
+    "keyword",
+    required=True,
+    type=click.STRING,
+)
+@click.option(
+    "--url",
+    default="http://localhost:8000/mcp",
+    help="Server URL",
+)
+def search_mcp(keyword, url):
+    """debug commands for check NidusMCP"""
+    from cli.debug.search_db_mcp import run_search
+
+    try:
+        asyncio.run(run_search(keyword, url))
+    except KeyboardInterrupt:
+        print("\nAborted by user.")
+
+
+@debug.command()
+@click.argument(
     "path",
-    help="PDF path",
     type=click.Path(exists=True, file_okay=True, dir_okay=False),
 )
 def read_pdf(path):
-    """debug commands for check PDF read"""
+    """debug commands for search document from Nidus MCP"""
     from cli.processor.pdf_processor import chunk_pdf
 
     pdf_path = Path(path).resolve()
