@@ -33,6 +33,27 @@ def list_tools(url):
     asyncio.run(list_all_tools(url))
 
 
+@debug.command()
+@click.argument(
+    "path",
+    help="PDF path",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False),
+)
+def read_pdf(path):
+    """debug commands for check PDF read"""
+    from cli.processor.pdf_processor import chunk_pdf
+
+    pdf_path = Path(path).resolve()
+    if pdf_path.exists():
+        logger.info(f"Imported {pdf_path}")
+    else:
+        logger.critical(f"PDF ({pdf_path}) was not found.")
+
+    chunks = chunk_pdf(pdf_path)
+    for chunk in chunks:
+        print(chunk)
+
+
 @cli.command()
 @click.option(
     "--doc_dir",
