@@ -2,13 +2,6 @@ import logging
 from pathlib import Path
 import click
 from common.logger_setup import setup_logging
-from common.model import EmbeddingModelManager
-from cli.db.init import init_db
-from cli.db.search_db import display_results_simple, search_docs_in_db
-from cli.db.update_db import update_files_in_db
-
-model = EmbeddingModelManager()
-
 
 setup_logging(level="INFO")
 logger = logging.getLogger(__name__)
@@ -35,6 +28,8 @@ def init(doc_dir):
         logger.warning("Document list is empty.")
         return
 
+    from cli.db.init import init_db
+
     init_db(targets)
 
 
@@ -55,6 +50,8 @@ def update(file):
         logger.warning("No valid files found to update.")
         return
 
+    from cli.db.update_db import update_files_in_db
+
     update_files_in_db(valid_paths)
 
 
@@ -69,6 +66,8 @@ def search(keyword):
     if not keyword or len(keyword) == 0:
         logger.warning("keyword is required.")
         return
+
+    from cli.db.search_db import display_results_simple, search_docs_in_db
 
     results = search_docs_in_db(keyword)
     display_results_simple(results)

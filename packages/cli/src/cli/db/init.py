@@ -1,17 +1,13 @@
 import logging
 from pathlib import Path
 from typing import List, Union
-from common.model import EmbeddingModelManager
-import pyarrow as pa  # https://github.com/lancedb/lancedb/issues/2384
-
-from common.lance_db_manager import LanceDBManager
-
 from cli.processor.file_processor import data_generator
+from common.model import EmbeddingModelManager
+from common.lance_db_manager import LanceDBManager
 from common.config import settings
 
-logger = logging.getLogger(__name__)
 
-model = EmbeddingModelManager()
+logger = logging.getLogger(__name__)
 
 
 def init_db(
@@ -22,6 +18,10 @@ def init_db(
     """
     Read documents from target directory.
     """
+
+    model = EmbeddingModelManager()
+    import pyarrow as pa
+
     db = LanceDBManager(db_path).db
     schema = pa.schema(
         [
