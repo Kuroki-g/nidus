@@ -1,20 +1,27 @@
+import logging
+from common.logger_setup import setup_logging
 from mcp.server.fastmcp import FastMCP
-from common.lance_db_manager import LanceDBManager
-from . import tools, resources, prompts
 from common.config import settings
 
 
 def main():
+    setup_logging(level="INFO")
+    logger = logging.getLogger(__name__)
+
+    logger.info("Nidus MCP: Document search server")
     mcp = FastMCP(
         "NidusMCP", json_response=True, host=settings.HOST, port=settings.PORT
     )
 
-    # Register all tools, resources, prompts
+    logger.debug("Registering all tools, resources, prompts")
+    from mcp_server import prompts, resources, tools
+
     tools.register_tools(mcp)
     resources.register_resources(mcp)
     prompts.register_prompts(mcp)
 
-    # init db connection
+    from common.lance_db_manager import LanceDBManager
+
     LanceDBManager()
 
     try:

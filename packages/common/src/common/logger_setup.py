@@ -1,18 +1,37 @@
 import logging
 import sys
 
-from common.config import settings
+LOG_FORMAT = "[%(asctime)s] %(levelname)s - %(message)s"
+formatter = logging.Formatter(LOG_FORMAT)
 
 
-def setup_logging(level: int = settings.LOG_LEVEL):
+def setup_logging(level="INFO"):
+    root_logger = logging.getLogger()
+    root_logger.setLevel(level)
+    # Clear existing handler
+    for h in root_logger.handlers[:]:
+        root_logger.removeHandler(h)
+
     handler = logging.StreamHandler(sys.stdout)
-    formatter = logging.Formatter("[%(asctime)s] %(levelname)s - %(message)s")
     handler.setFormatter(formatter)
+    root_logger.addHandler(handler)
+    # override uvicorn logger config
+    try:
+        from uvicorn.config import LOGGING_CONFIG
 
-    logger = logging.getLogger()
-    logger.setLevel(level)
-    logger.addHandler(handler)
+        LOGGING_CONFIG["formatters"]["default"]["fmt"] = LOG_FORMAT
+        LOGGING_CONFIG["formatters"]["access"]["fmt"] = LOG_FORMAT
+        for name in ["uvicorn", "uvicorn.error", "uvicorn.access"]:
+            u_logger = logging.getLogger(name)
+            u_logger.handlers = []
+            u_logger.propagate = True
 
+    except ImportError:
+        pass
 
-if __name__ == "__main__":
-    setup_logging()
+    silence_loggers = ["sentence_transformers", "torch", "httpx"]
+    for name in silence_loggers:
+        tgt = logging.getLogger(name)
+        tgt.setLevel(logging.WARNING)
+        tgt.propagate = True
+        tgt.handlers = []
