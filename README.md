@@ -37,10 +37,15 @@ You tell AI agent CLI by editing your `settings.json`.
 }
 ```
 
-## CLI tool
+## CLI tools
 
 For database status check, Nidus CLI is available.
 For detail, call `nidus --help`.
+
+## MCP tools
+
+For automatically update by AI agent, Nidus CLI is also available as MCP tools.
+For detail, call `list_tools` via MCP.
 
 ## [TODO] Use docker compose
 
