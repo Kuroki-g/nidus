@@ -43,7 +43,10 @@ def init(doc_dir):
     type=click.Path(exists=True, file_okay=True, dir_okay=False),
 )
 def update(file):
-    """init database"""
+    """add or update existing document in database
+
+    nidus update -f update-target.txt -f add-target.txt
+    """
     file_paths = [Path(f).resolve() for f in file]
     valid_paths = [p for p in file_paths if p.exists()]
     if not valid_paths:
