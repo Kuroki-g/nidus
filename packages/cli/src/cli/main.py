@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from pathlib import Path
 import click
@@ -11,6 +12,25 @@ logger = logging.getLogger(__name__)
 def cli():
     """Nidus CLI - Document MCP server CLI"""
     pass
+
+
+@cli.group()
+def debug():
+    """debug commands for check NidusMCP"""
+    pass
+
+
+@debug.command()
+@click.option(
+    "--url",
+    default="http://localhost:8000/mcp",
+    help="Server URL",
+)
+def list_tools(url):
+    """debug commands for check NidusMCP"""
+    from cli.debug.list_tools import list_all_tools
+
+    asyncio.run(list_all_tools(url))
 
 
 @cli.command()
