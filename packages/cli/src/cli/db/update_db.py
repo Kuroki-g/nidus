@@ -7,6 +7,7 @@ from typing import List
 from common.lance_db_manager import LanceDBManager
 
 from common.config import settings
+from common.os_utils import flatten_path_to_file
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +24,7 @@ def update_files_in_db(
     table = db.open_table(table_name)
 
     # delete target file record
-    paths_str = ", ".join([f"'{str(p)}'" for p in path_list])
+    paths_str = ", ".join([f"'{str(p)}'" for p in flatten_path_to_file(path_list)])
     delete_query = f"metadata.source IN ({paths_str})"
     table.delete(delete_query)
     logger.info(f"Deleted old data for: {paths_str}")

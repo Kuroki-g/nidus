@@ -4,12 +4,11 @@ import multiprocessing
 import os
 from pathlib import Path
 from typing import Callable, Iterable, List, Optional, Union
-
-
+import numpy as np
 from common.model import EmbeddingModelManager
 from cli.processor.markdown_processor import chunk_markdown
 from cli.processor.pdf_processor import chunk_pdf
-import numpy as np
+
 
 model = EmbeddingModelManager()
 logger = logging.getLogger(__name__)
@@ -59,14 +58,12 @@ def data_generator(
     path_list: List[Union[str, Path]], batch_size: int = 64
 ) -> Iterable[List[dict]]:
     """TODO: refactoring"""
+    from common.os_utils import flatten_path_to_file
+
     buffer = []
 
     for p in path_list:
-        path_obj = Path(p).resolve()
-        if path_obj.is_file():
-            targets = [path_obj]
-        else:
-            targets = (f for f in path_obj.rglob("*") if f.is_file())
+        targets = flatten_path_to_file(p)
 
         for file_path in targets:
             if file_path.is_dir():
