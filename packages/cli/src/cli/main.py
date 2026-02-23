@@ -76,15 +76,15 @@ def read_pdf(path):
 
 @cli.command()
 @click.option(
-    "--doc_dir",
-    help="document directory path(s)",
+    "--dir",
+    help="document directory path(s) to be store",
     multiple=True,
     required=True,
     type=click.Path(exists=True, file_okay=False, dir_okay=True),
 )
-def init(doc_dir):
+def init(dir):
     """init database and download model if not exist"""
-    targets = [str(Path(p).resolve()) for p in doc_dir]
+    targets = [str(Path(p).resolve()) for p in dir]
     if len(targets) == 0:
         logger.warning("Document list is empty.")
         return
