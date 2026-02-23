@@ -16,7 +16,7 @@ uv tool install git+https://github.com/Kuroki-g/nidus-mcp.git
 Init database:
 
 ```bash
-nidus init --doc_dir={YOUR_DOC_DIR}
+nidus init --dir={YOUR_DOC_DIR}
 ```
 
 Run Nidus Server:
@@ -70,6 +70,11 @@ services:
 volumes:
     nidus_data:
 ```
+
+## Notice
+
+All data is saved to `$HOME/.cache/nidus/` directory.
+For clean up, remove this directory.
 
 ## License
 
