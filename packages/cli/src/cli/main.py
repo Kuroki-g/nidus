@@ -79,18 +79,12 @@ def read_pdf(path):
     "--dir",
     help="document directory path(s) to be store",
     multiple=True,
-    required=True,
+    required=False,
     type=click.Path(exists=True, file_okay=False, dir_okay=True),
 )
 def init(dir):
     """init database and download model if not exist"""
-    targets = [str(Path(p).resolve()) for p in dir]
-    if len(targets) == 0:
-        logger.warning("Document list is empty.")
-        return
-
     logger.info("Initializing model.")
-
     try:
         from common.model import EmbeddingModelManager
 
@@ -116,6 +110,9 @@ def init(dir):
             exit(1)
     from cli.db.init import init_db
 
+    dir = [] if dir is None else dir
+    targets = [str(Path(p).resolve()) for p in dir]
+
     init_db(targets)
 
 
@@ -123,7 +120,7 @@ def init(dir):
 @click.option(
     "--file",
     "-f",
-    help="update file(s)",
+    help="file(s) to be added or updated",
     multiple=True,
     required=True,
     type=click.Path(exists=True, file_okay=True, dir_okay=False),

@@ -32,10 +32,11 @@ def init_db(
         ]
     )
 
+    data = None if len(path_list) == 0 else data_generator(path_list)
     table = db.create_table(
         table_name,
         schema=schema,
-        data=data_generator(path_list),
+        data=data,
         mode="overwrite",
     )
     table.create_fts_index("text", replace=True)
