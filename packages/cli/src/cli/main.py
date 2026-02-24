@@ -142,6 +142,21 @@ def list(keyword):
 # endregion cli
 
 
+@cli.group()
+def db():
+    """db commands."""
+    pass
+
+
+@db.command()
+def show_meta():
+    """show metadata for database file"""
+    from cli.meta.db_info import display_meta_simple, get_meta
+
+    meta = get_meta()
+    display_meta_simple(meta)
+
+
 # region debug
 @cli.group()
 def debug():

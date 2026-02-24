@@ -87,6 +87,50 @@ def list_docs(keyword: str) -> str:
         return format_mes(str(e))
 
 
+def db_show_meta() -> str:
+    """show metadata for database file"""
+    from cli.meta.db_info import get_meta, Metadata
+
+    def get_meta_summary_str(meta: Metadata, max_fields: int = 10) -> str:
+        """
+        convert database metadata to structured txt.
+        truncate files if too much fields.
+        """
+        lines = [
+            f"Database Path: {meta['database_path']}",
+            f"Total Tables: {meta['total_tables']}",
+            "--- Table Details ---",
+        ]
+
+        for tbl in meta["tables"]:
+            # extract schema as "name(type)" format
+            # 例: id(int64), vector(fixed_size_list[float32]), text(string)
+            fields = [f"{f.name}({f.type})" for f in tbl["schema"]]
+
+            # truncate fields if there is too many
+            if len(fields) > max_fields:
+                fields_str = (
+                    ", ".join(fields[:max_fields])
+                    + f" ... (+{len(fields) - max_fields} more)"
+                )
+            else:
+                fields_str = ", ".join(fields)
+
+            table_line = (
+                f"- Table: {tbl['table_name']}\n"
+                f"  Count: {tbl['record_count']}\n"
+                f"  Version: {tbl['version']}\n"
+                f"  Schema: [{fields_str}]"
+            )
+            lines.append(table_line)
+
+        return "\n".join(lines)
+
+    meta = get_meta()
+
+    return get_meta_summary_str(meta)
+
+
 def register_tools(mcp: FastMCP):
     mcp.tool()(search_docs)
     mcp.tool()(update_docs)
