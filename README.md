@@ -16,7 +16,13 @@ uv tool install git+https://github.com/Kuroki-g/nidus-mcp.git
 Init database:
 
 ```bash
-nidus init --dir={YOUR_DOC_DIR}
+nidus init
+```
+
+Add documents (you can also add documents via Nidus MCP):
+
+```bash
+nidus update -f add-target.txt -f update-target.txt -f target_dir/
 ```
 
 Run Nidus Server:

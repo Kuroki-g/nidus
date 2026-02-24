@@ -123,7 +123,7 @@ def init(dir):
     help="file(s) to be added or updated",
     multiple=True,
     required=True,
-    type=click.Path(exists=True, file_okay=True, dir_okay=False),
+    type=click.Path(exists=True, file_okay=True, dir_okay=True),
 )
 def update(file):
     """add or update existing document in database
