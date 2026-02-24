@@ -120,7 +120,7 @@ def init(dir):
 @click.option(
     "--file",
     "-f",
-    help="file(s) to be added or updated",
+    help="file(s) or dir to be added or updated",
     multiple=True,
     required=True,
     type=click.Path(exists=True, file_okay=True, dir_okay=True),
@@ -139,6 +139,31 @@ def update(file):
     from cli.db.update_db import update_files_in_db
 
     update_files_in_db(valid_paths)
+
+
+@cli.command()
+@click.option(
+    "--file",
+    "-f",
+    help="file(s) or dir to be deleted",
+    multiple=True,
+    required=True,
+    type=click.Path(exists=True, file_okay=True, dir_okay=True),
+)
+def delete(file):
+    """delete existing document information in database
+
+    nidus delete -f delete-target.txt -f delete-target-dir/
+    """
+    file_paths = [Path(f).resolve() for f in file]
+    valid_paths = [p for p in file_paths if p.exists()]
+    if not valid_paths:
+        logger.warning("No valid files found to be deleted.")
+        return
+
+    from cli.db.delete_db_record import delete_files_in_db
+
+    delete_files_in_db(valid_paths)
 
 
 @cli.command()
