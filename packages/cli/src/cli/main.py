@@ -14,66 +14,7 @@ def cli():
     pass
 
 
-@cli.group()
-def debug():
-    """debug commands for check NidusMCP"""
-    pass
-
-
-@debug.command()
-@click.option(
-    "--url",
-    default="http://localhost:8000/mcp",
-    help="Server URL",
-)
-def list_tools(url):
-    """debug commands for check NidusMCP"""
-    from cli.debug.list_tools import list_all_tools
-
-    asyncio.run(list_all_tools(url))
-
-
-@debug.command()
-@click.argument(
-    "keyword",
-    required=True,
-    type=click.STRING,
-)
-@click.option(
-    "--url",
-    default="http://localhost:8000/mcp",
-    help="Server URL",
-)
-def search_mcp(keyword, url):
-    """debug commands for check NidusMCP"""
-    from cli.debug.search_db_mcp import run_search
-
-    try:
-        asyncio.run(run_search(keyword, url))
-    except KeyboardInterrupt:
-        print("\nAborted by user.")
-
-
-@debug.command()
-@click.argument(
-    "path",
-    type=click.Path(exists=True, file_okay=True, dir_okay=False),
-)
-def read_pdf(path):
-    """debug commands for search document from Nidus MCP"""
-    from cli.processor.pdf_processor import chunk_pdf
-
-    pdf_path = Path(path).resolve()
-    if pdf_path.exists():
-        logger.info(f"Imported {pdf_path}")
-    else:
-        logger.critical(f"PDF ({pdf_path}) was not found.")
-
-    chunks = chunk_pdf(pdf_path)
-    for chunk in chunks:
-        print(chunk)
-
-
+# region cli
 @cli.command()
 @click.option(
     "--dir",
@@ -196,6 +137,73 @@ def list(keyword):
 
     results = list_docs_in_db(keyword)
     display_list_results_simple(results)
+
+
+# endregion cli
+
+
+# region debug
+@cli.group()
+def debug():
+    """debug commands for check NidusMCP"""
+    pass
+
+
+@debug.command()
+@click.option(
+    "--url",
+    default="http://localhost:8000/mcp",
+    help="Server URL",
+)
+def list_tools(url):
+    """debug commands for check NidusMCP"""
+    from cli.debug.list_tools import list_all_tools
+
+    asyncio.run(list_all_tools(url))
+
+
+@debug.command()
+@click.argument(
+    "keyword",
+    required=True,
+    type=click.STRING,
+)
+@click.option(
+    "--url",
+    default="http://localhost:8000/mcp",
+    help="Server URL",
+)
+def search_mcp(keyword, url):
+    """debug commands for check NidusMCP"""
+    from cli.debug.search_db_mcp import run_search
+
+    try:
+        asyncio.run(run_search(keyword, url))
+    except KeyboardInterrupt:
+        print("\nAborted by user.")
+
+
+@debug.command()
+@click.argument(
+    "path",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False),
+)
+def read_pdf(path):
+    """debug commands for search document from Nidus MCP"""
+    from cli.processor.pdf_processor import chunk_pdf
+
+    pdf_path = Path(path).resolve()
+    if pdf_path.exists():
+        logger.info(f"Imported {pdf_path}")
+    else:
+        logger.critical(f"PDF ({pdf_path}) was not found.")
+
+    chunks = chunk_pdf(pdf_path)
+    for chunk in chunks:
+        print(chunk)
+
+
+# endregion
 
 
 def main():
