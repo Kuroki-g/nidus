@@ -11,6 +11,12 @@ logger = logging.getLogger(__name__)
 
 
 def update_docs(path_list: List[Path]) -> None:
+    """
+    Update documents using all files assigned path_list.
+
+    Args:
+        path_list (List[Path]): target path to be analyzed.
+    """
     try:
         update_files_in_db(path_list)
     except Exception as e:

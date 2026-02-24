@@ -10,7 +10,15 @@ def main():
 
     logger.info("Nidus MCP: Document search server")
     mcp = FastMCP(
-        "NidusMCP", json_response=True, host=settings.HOST, port=settings.PORT
+        "NidusMCP",
+        instructions=(
+            "Nidus is a knowledge base server."
+            "User can put documents (planning document, document, manual etc.)"
+            "Nidus store separate files into chunks and store as a vector."
+        ),
+        json_response=True,
+        host=settings.HOST,
+        port=settings.PORT,
     )
 
     logger.debug("Registering all tools, resources, prompts")
