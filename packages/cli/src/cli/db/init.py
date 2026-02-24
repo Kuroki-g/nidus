@@ -20,18 +20,11 @@ def init_db(
     """
 
     model = EmbeddingModelManager()
-    import pyarrow as pa
 
     db = LanceDBManager(db_path).db
-    schema = pa.schema(
-        [
-            pa.field("vector", pa.list_(pa.float32(), model.vector_size)),
-            pa.field("text", pa.string()),
-            pa.field("source", pa.string()),
-            pa.field("chunk_id", pa.int64()),
-        ]
-    )
+    from cli.db.schemas import get_doc_schema
 
+    schema = get_doc_schema(model.vector_size)
     data = None if len(path_list) == 0 else data_generator(path_list)
     table = db.create_table(
         table_name,
