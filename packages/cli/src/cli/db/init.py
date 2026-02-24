@@ -1,10 +1,10 @@
 import logging
 from pathlib import Path
 from typing import List, Union
-from cli.processor.file_processor import data_generator
-from common.model import EmbeddingModelManager
+from cli.db.update_db import update_files_in_db
 from common.lance_db_manager import LanceDBManager
 from common.config import settings
+from lancedb import Table
 
 
 logger = logging.getLogger(__name__)
@@ -31,25 +31,37 @@ def init_model():
 
 def init_db(
     path_list: List[Union[str, Path]],
-    table_name: str = settings.TABLE_NAME,
-    db_path=settings.DB_PATH,
 ):
     """
     Read documents from target directory.
     """
 
+    (doc_table) = create_db_schemas()
+    doc_table_name = settings.TABLE_NAME
+    update_files_in_db(
+        path_list,
+    )
+    doc_table.create_fts_index("text", replace=True)
+    logger.info(
+        f"Database initialized and FTS index created for table: {doc_table_name}"
+    )
+
+
+def create_db_schemas() -> Table:
+    from common.model import EmbeddingModelManager
+
     model = EmbeddingModelManager()
 
-    db = LanceDBManager(db_path).db
     from cli.db.schemas import get_doc_schema
 
     schema = get_doc_schema(model.vector_size)
-    data = None if len(path_list) == 0 else data_generator(path_list)
-    table = db.create_table(
-        table_name,
+
+    db = LanceDBManager().db
+    table = db.add(
+        table_name=settings.TABLE_NAME,
         schema=schema,
-        data=data,
+        data=None,
         mode="overwrite",
     )
-    table.create_fts_index("text", replace=True)
-    logger.info(f"Database initialized and FTS index created for table: {table_name}")
+
+    return table
