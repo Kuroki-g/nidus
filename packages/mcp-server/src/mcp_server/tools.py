@@ -2,6 +2,7 @@ import logging
 from pathlib import Path
 from typing import List
 
+from common.format import format_mes
 from mcp.server import FastMCP
 
 from cli.db.search_db import search_docs_in_db, SearchMethod
@@ -83,9 +84,10 @@ def list_docs(keyword: str) -> str:
             output.append(f"--- source: {source} ---\n{text_snippet}...\n")
         return "\n".join(output)
     except Exception as e:
-        return f"検索エラーが発生しました: {str(e)}"
+        return format_mes(str(e))
 
 
 def register_tools(mcp: FastMCP):
     mcp.tool()(search_docs)
     mcp.tool()(update_docs)
+    mcp.tool()(list_docs)
