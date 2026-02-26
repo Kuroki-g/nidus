@@ -7,4 +7,4 @@
 - 🛠️ : [Maintenance]
 
 ---
-**Full Changelog**: https://github.com/Kuroki-g/nidus-mcp/compare/[Old-Tag]...[New-Tag]
+**Full Changelog**: https://github.com/Kuroki-g/nidus/compare/[Old-Tag]...[New-Tag]

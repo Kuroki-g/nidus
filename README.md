@@ -1,6 +1,6 @@
 # nidus-mcp
 
-NidusMCP is an open-source MCP server that search documents information locally.
+Nidus is an open-source document store database locally.
 It provides locally-restricted document search.
 
 ## Quick start
@@ -10,7 +10,7 @@ It provides locally-restricted document search.
 Installation:
 
 ```bash
-uv tool install git+https://github.com/Kuroki-g/nidus-mcp.git
+uv tool install git+https://github.com/Kuroki-g/nidus.git
 ```
 
 Init database:
