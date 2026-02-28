@@ -1,3 +1,36 @@
 {
-  "$schema": "https://json.schemastore.org/claude-code-settings.json"
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Read",
+      "Glob",
+      "Grep",
+      "Bash(git status*)",
+      "Bash(git log*)",
+      "Bash(git diff*)",
+      "Bash(git show*)",
+      "Bash(git branch*)",
+      "Bash(git remote*)",
+      "Bash(git stash list*)",
+      "Bash(ls*)",
+      "Edit"
+    ],
+    "ask": [
+      "Task",
+      "WebFetch",
+      "Write",
+      "mcp__ide__getDiagnostics"
+    ],
+    "deny": [
+      "Bash(git push*)",
+      "Bash(git checkout -b*)",
+      "Bash(git switch -c*)",
+      "Bash(git switch --create*)",
+      "Bash(curl*)",
+      "Bash(wget*)",
+      "WebSearch",
+      "NotebookEdit",
+      "mcp__ide__executeCode"
+    ]
+  }
 }
