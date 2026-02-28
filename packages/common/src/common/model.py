@@ -1,4 +1,5 @@
 import logging
+import threading
 from huggingface_hub import snapshot_download
 from model2vec import StaticModel
 
@@ -13,15 +14,20 @@ class EmbeddingModelManager:
     _instance = None
     _model = None
     _vector_size = None
+    _lock = threading.Lock()
 
     def __new__(cls):
         if cls._instance is None:
-            logger.debug("initializing model.")
-            cls._instance = super(EmbeddingModelManager, cls).__new__(cls)
-            local_path = snapshot_download(DEFAULT_MODEL_NAME, local_files_only=True)
-            cls._model = StaticModel.from_sentence_transformers(local_path)
-            cls._vector_size = MODEL_VECTOR_SIZE
-            logger.info("initializing model done.")
+            with cls._lock:
+                if cls._instance is None:
+                    logger.debug("initializing model.")
+                    cls._instance = super(EmbeddingModelManager, cls).__new__(cls)
+                    local_path = snapshot_download(
+                        DEFAULT_MODEL_NAME, local_files_only=True
+                    )
+                    cls._model = StaticModel.from_sentence_transformers(local_path)
+                    cls._vector_size = MODEL_VECTOR_SIZE
+                    logger.info("initializing model done.")
         return cls._instance
 
     @property
