@@ -11,7 +11,7 @@ members = [
     "cli",
     "common",
     "mcp-server",
-    "nidus-mcp",
+    "nidus",
 ]
 
 [[package]]
@@ -540,7 +540,7 @@ wheels = [
 ]
 
 [[package]]
-name = "nidus-mcp"
+name = "nidus"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
