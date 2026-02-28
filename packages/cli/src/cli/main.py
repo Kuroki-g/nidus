@@ -1,4 +1,3 @@
-import asyncio
 import logging
 from pathlib import Path
 import click
@@ -10,8 +9,23 @@ logger = logging.getLogger(__name__)
 
 @click.group()
 def cli():
-    """Nidus CLI - Document MCP server CLI"""
+    """Nidus - Japanese local document search engine"""
     pass
+
+
+@cli.command(name="help")
+@click.argument("command", required=False)
+@click.pass_context
+def help_command(ctx, command):
+    """Show help for a command. (e.g. nidus help add)"""
+    if command is None:
+        click.echo(ctx.parent.get_help())
+        return
+    cmd = ctx.parent.command.commands.get(command)
+    if cmd is None:
+        raise click.UsageError(f"No such command: {command!r}")
+    with click.Context(cmd, parent=ctx.parent, info_name=command) as sub_ctx:
+        click.echo(cmd.get_help(sub_ctx))
 
 
 # region cli
@@ -53,10 +67,10 @@ def init(verbose, dir):
     required=True,
     type=click.Path(exists=True, file_okay=True, dir_okay=True),
 )
-def update(file):
+def add(file):
     """add or update existing document in database
 
-    nidus update -f update-target.txt -f add-target.txt
+    nidus add -f update-target.txt -f add-target.txt
     """
     file_paths = [Path(f).resolve() for f in file]
     valid_paths = [p for p in file_paths if p.exists()]
@@ -78,10 +92,10 @@ def update(file):
     required=True,
     type=click.Path(exists=True, file_okay=True, dir_okay=True),
 )
-def delete(file):
+def drop(file):
     """delete existing document information in database
 
-    nidus delete -f delete-target.txt -f delete-target-dir/
+    nidus drop -f delete-target.txt -f delete-target-dir/
     """
     file_paths = [Path(f).resolve() for f in file]
     valid_paths = [p for p in file_paths if p.exists()]
@@ -126,17 +140,8 @@ def list(keyword):
     display_list_results_simple(results)
 
 
-# endregion cli
-
-
-@cli.group()
-def db():
-    """db commands."""
-    pass
-
-
-@db.command()
-def show_meta():
+@cli.command()
+def status():
     """show metadata for database file"""
     from cli.meta.db_info import display_meta_simple, get_meta
 
@@ -144,45 +149,14 @@ def show_meta():
     display_meta_simple(meta)
 
 
+# endregion cli
+
+
 # region debug
 @cli.group()
 def debug():
-    """debug commands for check NidusMCP"""
+    """debug commands"""
     pass
-
-
-@debug.command()
-@click.option(
-    "--url",
-    default="http://localhost:8000/mcp",
-    help="Server URL",
-)
-def list_tools(url):
-    """debug commands for check NidusMCP"""
-    from cli.debug.list_tools import list_all_tools
-
-    asyncio.run(list_all_tools(url))
-
-
-@debug.command()
-@click.argument(
-    "keyword",
-    required=True,
-    type=click.STRING,
-)
-@click.option(
-    "--url",
-    default="http://localhost:8000/mcp",
-    help="Server URL",
-)
-def search_mcp(keyword, url):
-    """debug commands for check NidusMCP"""
-    from cli.debug.search_db_mcp import run_search
-
-    try:
-        asyncio.run(run_search(keyword, url))
-    except KeyboardInterrupt:
-        print("\nAborted by user.")
 
 
 @debug.command()
@@ -190,17 +164,15 @@ def search_mcp(keyword, url):
     "path",
     type=click.Path(exists=True, file_okay=True, dir_okay=False),
 )
-def read_pdf(path):
-    """debug commands for search document from Nidus MCP"""
-    from cli.processor.pdf_processor import chunk_pdf
+def parse(path):
+    """parse a document file and print chunks"""
+    from cli.processor.file_processor import get_chunks
 
-    pdf_path = Path(path).resolve()
-    if pdf_path.exists():
-        logger.info(f"Imported {pdf_path}")
-    else:
-        logger.critical(f"PDF ({pdf_path}) was not found.")
-
-    chunks = chunk_pdf(pdf_path)
+    file_path = Path(path).resolve()
+    chunks = get_chunks(file_path)
+    if chunks is None:
+        logger.error(f"Failed to parse: {file_path}")
+        return
     for chunk in chunks:
         print(chunk)
 
