@@ -19,10 +19,10 @@ def init_model():
     except Exception as _e:
         logger.warning("failed to load model. downloading from HuggingFace.")
         from huggingface_hub import snapshot_download
-        from common.model import DEFAULT_MODEL_NAME
+        from common.model import DEFAULT_MODEL_ID
 
         try:
-            snapshot_download(DEFAULT_MODEL_NAME)
+            snapshot_download(DEFAULT_MODEL_ID)
         except Exception as download_err:
             logger.error(download_err)
             logger.critical("failed to download model.")

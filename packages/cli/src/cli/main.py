@@ -23,8 +23,16 @@ def cli():
     required=False,
     type=click.Path(exists=True, file_okay=False, dir_okay=True),
 )
-def init(dir):
+@click.option(
+    "--verbose",
+    "-v",
+    help="verbose log",
+    is_flag=True,
+)
+def init(verbose, dir):
     """init database and download model if not exist"""
+    if verbose:
+        setup_logging(level="DEBUG")
 
     from cli.db.init import init_db, init_model
 
