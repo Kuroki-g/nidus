@@ -1,87 +1,126 @@
-# nidus-mcp
+# nidus
 
-Nidus is an open-source document store database locally.
-It provides locally-restricted document search.
+**Nidus** は日本語に最適化されたローカル文書検索エンジンです。
+AI エージェント（Claude、Cursor など）から MCP 経由で使うことを想定して設計されています。
 
-## Quick start
+Markdown・PDF・テキスト・AsciiDoc をチャンクに分割してインデックスし、FTS + ベクターのハイブリッド検索で結果を返します。
 
-### Install globally with uv and serve
+## Features
 
-Installation:
+- **日本語向けチャンク分割**: 句点（。！？）→ 段落 → 改行の優先順で文境界を検出。見出しをチャンクのプレフィックスとして付与し、検索結果の文脈を保持
+- **ハイブリッド検索**: FTS + ベクター検索を RRF (Reciprocal Rank Fusion) でスコアリング・統合
+- **Adjacent chunks**: ヒットチャンクの前後を結合してスニペットを生成し、AI に十分な文脈を渡す
+- **完全ローカル**: `nidus init` でモデルをキャッシュ後はオフライン動作
+- **MCP 対応**: HTTP トランスポートで AI クライアントからそのまま利用可能
+
+## Supported File Types
+
+| 拡張子 | 処理 |
+|--------|------|
+| `.md`  | 見出し単位でセクション分割 → 文境界チャンク化 |
+| `.adoc` | 見出し単位でセクション分割 → 文境界チャンク化 |
+| `.txt` | 文境界チャンク化 |
+| `.pdf` | テキスト抽出 (pypdf / pdfminer フォールバック) → 文境界チャンク化 |
+
+## Quick Start
+
+### インストール
 
 ```bash
 uv tool install git+https://github.com/Kuroki-g/nidus.git
 ```
 
-Init database:
+### 初期化（初回のみ）
 
 ```bash
 nidus init
 ```
 
-Add documents (you can also add documents via Nidus MCP):
+埋め込みモデル (`hotchpotch/static-embedding-japanese`) をダウンロードし、LanceDB を初期化します。以降はオフラインで動作します。
+
+### ドキュメントを追加
 
 ```bash
-nidus update -f add-target.txt -f update-target.txt -f target_dir/
+nidus add -f README.md -f docs/
 ```
 
-Run Nidus Server:
+### 検索
+
+```bash
+nidus search "チャンク分割"
+```
+
+### MCP サーバーとして起動
 
 ```bash
 nidus-mcp
 ```
 
-You tell AI agent CLI by editing your `settings.json`.
+AI クライアントの設定に追記します（例: Claude Code `settings.json`）:
 
 ```json
 {
   "mcpServers": {
     "nidus": {
-      "httpUrl": "http://localhost:8000/mcp",
+      "httpUrl": "http://localhost:8000/mcp"
     }
   }
 }
 ```
 
-## CLI tools
+## CLI Commands
 
-For database status check, Nidus CLI is available.
-For detail, call `nidus --help`.
+| コマンド | 説明 |
+|---------|------|
+| `nidus init [--dir DIR]` | DB 初期化・モデルダウンロード。`--dir` でファイルも同時追加可 |
+| `nidus add -f FILE/DIR`  | ファイルをインデックスに追加・更新（複数指定可） |
+| `nidus drop -f FILE/DIR` | ファイルをインデックスから削除（複数指定可） |
+| `nidus search KEYWORD`   | キーワードでハイブリッド検索 |
+| `nidus list [KEYWORD]`   | インデックス済みファイル一覧（キーワードでパスを絞り込み） |
+| `nidus status`           | DB のメタ情報（テーブル・レコード数など）を表示 |
+| `nidus debug parse FILE` | ファイルのチャンク分割結果を確認 |
 
-## MCP tools
+## MCP Tools
 
-For automatically update by AI agent, Nidus CLI is also available as MCP tools.
-For detail, call `list_tools` via MCP.
+`nidus-mcp` で起動したサーバー (`http://localhost:8000/mcp`) は以下のツールを提供します:
 
-## [TODO] Use docker compose
+| ツール | 説明 |
+|--------|------|
+| `search_docs` | キーワードでハイブリッド検索し、スニペットを返す |
+| `update_docs` | ドキュメントを追加・更新 |
+| `list_docs`   | インデックス済みドキュメントの一覧を返す |
 
-I have a plan but not implemented.
+## Configuration
 
-```yaml
-services:
-    // here your service
-    // ...
-    nidus:
-        image: nidus:latest
-        environment:
-            # default: 8000
-            PORT: 8000
-            # DB_PATH default ./db/.lancedb
-            DB_PATH: "${PWD}:./.lancedb"
-        ports:
-            - "8000:8000"
-        volumes:
-            # document directory mount
-            - nidus:/docs
-volumes:
-    nidus_data:
+`.env` ファイルで設定を上書きできます:
+
+```env
+DB_PATH=~/.cache/nidus/.lancedb   # DB 保存先
+SEARCH_LIMIT=5                     # 検索結果の最大件数
+PORT=8000                          # MCP サーバーポート
+HOST=127.0.0.1                     # MCP サーバーホスト
+```
+
+## Technical Details
+
+- **埋め込みモデル**: `hotchpotch/static-embedding-japanese` (model2vec, 1024 次元)
+- **ベクター DB**: LanceDB
+- **チャンク設定**: `chunk_size=1000 / overlap=150 / min_chunk=200`
+- **ランキング**: RRF (k=60) で FTS・ベクター検索結果を統合
+- **Python**: 3.14 / パッケージ管理: uv ワークスペース
+
+## Docker
+
+Docker イメージをビルドして使うことができます:
+
+```bash
+./build-container.sh
 ```
 
 ## Notice
 
-All data is saved to `$HOME/.cache/nidus/` directory.
-For clean up, remove this directory.
+データはすべて `$HOME/.cache/nidus/` に保存されます。クリーンアップするにはこのディレクトリを削除してください。
 
 ## License
 
-- License: [Apache License 2.0](https://github.com/Kuroki-g/nidus-mcp/blob/main/LICENSE)
+[Apache License 2.0](LICENSE)
