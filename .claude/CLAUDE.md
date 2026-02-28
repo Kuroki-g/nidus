@@ -23,10 +23,6 @@ uv run pytest
 # 単一テストファイルの実行
 uv run pytest packages/cli/tests/processor/test_markdown_processor.py
 
-# リント / フォーマット
-uv run ruff check .
-uv run ruff format .
-
 # Docker イメージビルド
 ./build-container.sh
 ```
