@@ -55,6 +55,16 @@ def update_files_in_db(
 
     # write doc_chunk records
     doc_chunk_table.add(data_generator(path_list))
-    doc_chunk_table.create_fts_index("chunk_text", replace=True)
+    doc_chunk_table.create_fts_index(
+        "chunk_text",
+        replace=True,
+        base_tokenizer="ngram",
+        ngram_min_length=2,
+        ngram_max_length=2,
+        lower_case=False,
+        stem=False,
+        remove_stop_words=False,
+        ascii_folding=False,
+    )
 
     logger.info("Database update and FTS index optimization complete.")
