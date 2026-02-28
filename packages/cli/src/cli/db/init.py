@@ -36,18 +36,13 @@ def init_db(
     Read documents from target directory.
     """
 
-    (doc_table) = create_db_schemas()
-    doc_table_name = settings.TABLE_NAME
-    update_files_in_db(
-        path_list,
-    )
-    doc_table.create_fts_index("text", replace=True)
-    logger.info(
-        f"Database initialized and FTS index created for table: {doc_table_name}"
-    )
+    doc_meta_table, doc_chunk_table = create_db_schemas()
+    update_files_in_db(path_list)
+    doc_chunk_table.create_fts_index("chunk_text", replace=True)
+    logger.info("Database initialized and FTS index created for doc_chunk table.")
 
 
-def create_db_schemas(db_uri: str = settings.DB_PATH) -> Table:
+def create_db_schemas(db_uri: str = settings.DB_PATH) -> tuple[Table, Table]:
     from common.model import EmbeddingModelManager
 
     db = LanceDBManager(db_uri).db
@@ -57,27 +52,20 @@ def create_db_schemas(db_uri: str = settings.DB_PATH) -> Table:
     from cli.db.schemas import (
         schema_names,
         get_doc_meta_schema,
-        get_doc_full_text_schema,
         get_doc_chunk_schema,
     )
 
     doc_meta_table = db.create_table(
-        table_name=schema_names.doc_meta,
+        name=schema_names.doc_meta,
         schema=get_doc_meta_schema(),
         data=None,
         mode="overwrite",
     )
-    table = db.create_table(
-        table_name=schema_names.doc_full_text,
-        schema=get_doc_full_text_schema(),
-        data=None,
-        mode="overwrite",
-    )
-    table = db.create_table(
-        table_name=schema_names.doc_chunk,
+    doc_chunk_table = db.create_table(
+        name=schema_names.doc_chunk,
         schema=get_doc_chunk_schema(model.vector_size),
         data=None,
         mode="overwrite",
     )
 
-    return (doc_meta_table, table)
+    return doc_meta_table, doc_chunk_table

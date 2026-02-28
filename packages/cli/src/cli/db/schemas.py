@@ -7,7 +7,6 @@ from pydantic_settings import BaseSettings
 class SchemaNames(BaseSettings):
     doc_meta: str = "doc_meta"
     doc_chunk: str = "doc_chunk"
-    doc_full_text: str = "doc_full_text"
 
 
 schema_names = SchemaNames()
@@ -32,22 +31,6 @@ def get_doc_meta_schema_fields():
 
 def get_doc_meta_schema():
     fields = get_doc_meta_schema_fields()
-    schema = pa.schema(fields)
-
-    return schema
-
-
-def get_doc_full_text_schema_fields():
-    fields = [
-        *_doc_index_fields(),
-        pa.field("full_text", pa.string()),
-    ]
-
-    return fields
-
-
-def get_doc_full_text_schema():
-    fields = get_doc_full_text_schema_fields()
     schema = pa.schema(fields)
 
     return schema

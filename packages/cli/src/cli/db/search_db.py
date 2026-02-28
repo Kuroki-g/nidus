@@ -9,11 +9,13 @@ import numpy as np
 
 logger = logging.getLogger(__name__)
 
+_RRF_K = 60
+
 
 class SearchMethod(Enum):
     Keyword = Literal["Keyword"]
     Semantic = Literal["Semantic"]
-    Unknown = Literal["Unknown"]
+    Hybrid = Literal["Hybrid"]
 
 
 class SearchResult(TypedDict):
@@ -21,113 +23,122 @@ class SearchResult(TypedDict):
     source: str
     text: str
     chunk_id: int
+    score: float
 
 
-def get_single_doc_in_db(keyword: str | None) -> SearchResult | None:
+class DocListEntry(TypedDict):
+    source: str
+    doc_name: str
+
+
+def _rrf_score(rank: int, k: int = _RRF_K) -> float:
+    return 1.0 / (k + rank + 1)
+
+
+def _get_adjacent_text(table, source: str, chunk_id: int, window: int = 1) -> str:
+    """Fetch chunk_id-window to chunk_id+window and concatenate as context."""
+    lo = max(0, chunk_id - window)
+    hi = chunk_id + window
+    where_clause = f"source = '{source}' AND chunk_id >= {lo} AND chunk_id <= {hi}"
+    rows = (
+        table.search()
+        .where(where_clause)
+        .select(["chunk_id", "chunk_text"])
+        .to_list()
+    )
+    rows_sorted = sorted(rows, key=lambda r: r["chunk_id"])
+    return "\n".join(r["chunk_text"] for r in rows_sorted)
+
+
+def list_docs_in_db(keyword: str | None) -> List[DocListEntry]:
+    from cli.db.schemas import schema_names
+
     db = LanceDBManager().db
     try:
-        table = db.open_table(settings.TABLE_NAME)
-        query = (
-            table.search().select(["source", "chunk_id", "text"]).where("chunk_id = 0")
-        )
-        if keyword is not None:
-            query = query.where("source = '{keyword}'")
-        results = query.limit(1).to_list()
-
-        if not results:
-            logger.debug(f"Information to match '{keyword}' was not found.")
-            return results
-
-        return results
-    except Exception as e:
-        logger.critical(e)
-        return None
-
-
-def list_docs_in_db(keyword: str | None) -> List[SearchResult]:
-    db = LanceDBManager().db
-    try:
-        table = db.open_table(settings.TABLE_NAME)
-        query = (
-            table.search().select(["source", "chunk_id", "text"]).where("chunk_id = 0")
-        )
+        table = db.open_table(schema_names.doc_meta)
+        query = table.search().select(["source", "doc_name"])
         if keyword is not None:
             query = query.where(f"source LIKE '%{keyword}%'")
         results = query.limit(settings.SEARCH_LIMIT * 10).to_list()
-
-        if not results:
-            logger.debug(f"Information to match '{keyword}' was not found.")
-            return []
-
         return results
     except Exception as e:
         logger.critical(e)
         return []
 
 
-def display_list_results_simple(results: list[SearchResult]):
-    header = f"{'Source':<15} | {'Text'}"
+def display_list_results_simple(results: List[DocListEntry]):
+    header = f"{'Source':<60} | {'Name'}"
     print(header)
     print("-" * 80)
 
     for res in results:
-        source = res["source"][:13] + ".." if len(res["source"]) > 15 else res["source"]
-        text = res["text"].replace("\n", " ")[:50] + "..."
-
-        print(f"{source:<15} | {text}")
+        source = res["source"]
+        doc_name = res.get("doc_name", "")
+        print(f"{source:<60} | {doc_name}")
 
 
 def search_docs_in_db(keyword: str) -> List[SearchResult]:
+    from cli.db.schemas import schema_names
+
     db = LanceDBManager().db
     try:
-        table = db.open_table(settings.TABLE_NAME)
-        # 1. Search by FTS
+        table = db.open_table(schema_names.doc_chunk)
+
+        # 1. FTS search
         fts_results = (
             table.search(keyword, query_type="fts")
+            .select(["source", "chunk_id", "chunk_text"])
             .limit(settings.SEARCH_LIMIT)
             .to_list()
         )
 
-        # 2. Search by vector search
+        # 2. Vector search
         model = EmbeddingModelManager().model
-        raw_embedding = model.encode(keyword, show_progress_bar=False)
-        query_embed = raw_embedding.astype(np.float32)
+        query_embed = model.encode(
+            keyword, show_progress_bar=False, convert_to_numpy=True
+        ).astype(np.float32)
 
         vector_results = (
             table.search(query_embed, vector_column_name="vector")
+            .select(["source", "chunk_id", "chunk_text"])
             .limit(settings.SEARCH_LIMIT)
             .to_list()
         )
 
-        # 3. Merge results
-        seen_texts = set()
-        unique_results: List[SearchResult] = []
-        for row in fts_results + vector_results:
-            text = row.get("text", "")
-            if text in seen_texts:
-                continue
-            seen_texts.add(text)
-            source = row.get(
-                "source", "unknown"
-            )  # get source else filled with "unknown"
-            chunk_id = row.get("chunk_id", "unknown")
+        # 3. RRF scoring
+        scores: dict[tuple[str, int], float] = {}
+        methods: dict[tuple[str, int], SearchMethod] = {}
 
-            # get first 300 words
-            text_snippet = text.replace("\n", " ")[:300]
-            search_method = (
-                SearchMethod.Keyword if row in fts_results else SearchMethod.Semantic
-            )
+        for rank, row in enumerate(fts_results):
+            key = (row["source"], row["chunk_id"])
+            scores[key] = scores.get(key, 0.0) + _rrf_score(rank)
+            methods[key] = SearchMethod.Keyword
+
+        for rank, row in enumerate(vector_results):
+            key = (row["source"], row["chunk_id"])
+            scores[key] = scores.get(key, 0.0) + _rrf_score(rank)
+            if key in methods:
+                methods[key] = SearchMethod.Hybrid
+            else:
+                methods[key] = SearchMethod.Semantic
+
+        # 4. Sort by RRF score and build results with adjacent context
+        sorted_keys = sorted(scores.keys(), key=lambda k: scores[k], reverse=True)
+
+        unique_results: List[SearchResult] = []
+        for source, chunk_id in sorted_keys[: settings.SEARCH_LIMIT]:
+            text = _get_adjacent_text(table, source, chunk_id)
             result: SearchResult = {
-                "method": search_method,
-                "text": text_snippet,
+                "method": methods[(source, chunk_id)],
+                "text": text,
                 "source": source,
                 "chunk_id": chunk_id,
+                "score": scores[(source, chunk_id)],
             }
             unique_results.append(result)
 
         if not unique_results:
             logger.debug(f"Information to match '{keyword}' was not found.")
-            return []
 
         return unique_results
     except Exception as e:
@@ -135,14 +146,15 @@ def search_docs_in_db(keyword: str) -> List[SearchResult]:
         return []
 
 
-def display_results_simple(results: list[SearchResult]):
-    header = f"{'ID':<5} | {'Method':<10} | {'Source':<15} | {'Text'}"
+def display_results_simple(results: List[SearchResult]):
+    header = f"{'Score':<8} | {'Method':<10} | {'Source':<15} | {'Text'}"
     print(header)
     print("-" * 80)
 
     for res in results:
+        score = f"{res['score']:.4f}"
         method = res["method"].name
         source = res["source"][:13] + ".." if len(res["source"]) > 15 else res["source"]
         text = res["text"].replace("\n", " ")[:50] + "..."
 
-        print(f"{res['chunk_id']:<4} | {method:<8} | {source:<15} | {text}")
+        print(f"{score:<8} | {method:<10} | {source:<15} | {text}")

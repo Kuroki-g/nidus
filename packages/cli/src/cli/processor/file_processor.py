@@ -82,8 +82,9 @@ def data_generator(
                     vector_data = get_embedding(chunk)
                     record = {
                         "vector": vector_data,
-                        "text": chunk,
+                        "chunk_text": chunk,
                         "source": str(file_path.absolute()),
+                        "doc_name": file_path.name,
                         "chunk_id": i,
                     }
                     buffer.append(record)
