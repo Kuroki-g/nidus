@@ -5,9 +5,12 @@ from pydantic_settings import BaseSettings
 
 
 class SchemaNames(BaseSettings):
-    Meta: str = "doc_meta"
-    Doc: str = "doc"
-    DocFullText: str = "doc_full_text"
+    doc_meta: str = "doc_meta"
+    doc_chunk: str = "doc_chunk"
+    doc_full_text: str = "doc_full_text"
+
+
+schema_names = SchemaNames()
 
 
 def _doc_index_fields():
@@ -34,24 +37,6 @@ def get_doc_meta_schema():
     return schema
 
 
-def get_doc_schema_fields(vector_size: int):
-    fields = [
-        *_doc_index_fields(),
-        pa.field("vector", pa.list_(pa.float32(), vector_size)),
-        pa.field("chunk_id", pa.int64()),
-        pa.field("created", pa.date32()),
-    ]
-
-    return fields
-
-
-def get_doc_schema(vector_size: int):
-    fields = get_doc_schema_fields(vector_size)
-    schema = pa.schema(fields)
-
-    return schema
-
-
 def get_doc_full_text_schema_fields():
     fields = [
         *_doc_index_fields(),
@@ -68,7 +53,7 @@ def get_doc_full_text_schema():
     return schema
 
 
-def get_doc_text_schema_fields(vector_size: int):
+def get_doc_chunk_schema_fields(vector_size: int):
     fields = [
         *_doc_index_fields(),
         pa.field("vector", pa.list_(pa.float32(), vector_size)),
@@ -79,8 +64,8 @@ def get_doc_text_schema_fields(vector_size: int):
     return fields
 
 
-def get_doc_text_schema(vector_size: int):
-    fields = get_doc_text_schema_fields(vector_size)
+def get_doc_chunk_schema(vector_size: int):
+    fields = get_doc_chunk_schema_fields(vector_size)
     schema = pa.schema(fields)
 
     return schema

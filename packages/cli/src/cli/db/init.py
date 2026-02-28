@@ -47,21 +47,37 @@ def init_db(
     )
 
 
-def create_db_schemas() -> Table:
+def create_db_schemas(db_uri: str = settings.DB_PATH) -> Table:
     from common.model import EmbeddingModelManager
+
+    db = LanceDBManager(db_uri).db
 
     model = EmbeddingModelManager()
 
-    from cli.db.schemas import get_doc_schema
+    from cli.db.schemas import (
+        schema_names,
+        get_doc_meta_schema,
+        get_doc_full_text_schema,
+        get_doc_chunk_schema,
+    )
 
-    schema = get_doc_schema(model.vector_size)
-
-    db = LanceDBManager().db
-    table = db.add(
-        table_name=settings.TABLE_NAME,
-        schema=schema,
+    doc_meta_table = db.create_table(
+        table_name=schema_names.doc_meta,
+        schema=get_doc_meta_schema(),
+        data=None,
+        mode="overwrite",
+    )
+    table = db.create_table(
+        table_name=schema_names.doc_full_text,
+        schema=get_doc_full_text_schema(),
+        data=None,
+        mode="overwrite",
+    )
+    table = db.create_table(
+        table_name=schema_names.doc_chunk,
+        schema=get_doc_chunk_schema(model.vector_size),
         data=None,
         mode="overwrite",
     )
 
-    return table
+    return (doc_meta_table, table)
