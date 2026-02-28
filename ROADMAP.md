@@ -16,7 +16,7 @@
 - [x] ランキングの改善（RRF: Reciprocal Rank Fusion の導入）
 - [x] スキーマ正規化（doc_meta + doc_chunk の 2 テーブル構成）
 - [x] Adjacent chunks によるコンテキスト拡張（ヒットチャンクの前後を結合して返す）
-- [ ] チャンク長の見直し（現行の長さの検討・調整）
+- [x] チャンク長の見直し（chunk_size=1000, overlap=150, min_chunk=200 に変更。文境界優先分割・見出しプレフィックス付与を導入）
 - [ ] FTS 日本語対応の調査・修正（現状: `simple` トークナイザーが日本語連続文字列を分割できず長文でヒットしない。形態素解析による事前分割などを検討）
 
 ### 完了条件
@@ -30,9 +30,10 @@
 **ゴール**: Markdown・PDF 以外の一般的なテキストファイルを扱える状態
 
 ### タスク
-- [ ] プレーンテキスト（`.txt`）対応
+- [x] プレーンテキスト（`.txt`）対応
+- [x] AsciiDoc（`.adoc`）対応
 - [ ] HTML 対応
 
 ### 完了条件
-- `nidus update -f file.txt` および `-f file.html` が正常に動作する
+- `nidus add -f file.txt` および `-f file.html` が正常に動作する
 - チャンク・検索が Markdown・PDF と同等に機能する
