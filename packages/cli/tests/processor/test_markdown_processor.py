@@ -1,40 +1,79 @@
 from cli.processor.markdown_processor import chunk_markdown
 
 
-def test_chunk_markdown_basic(tmp_path):
-    test_file = tmp_path / "test.md"
-    # 合計82文字（改行含む）
-    content = ("A" * 40) + "\n\n" + ("B" * 40)
-    test_file.write_text(content, encoding="utf-8")
-
-    # chunk_sizeを「1つのブロック（40文字）」は入るが
-    # 「2つのブロック（80文字以上）」は入らないサイズに設定
-    chunk_size = 50
-    chunks = chunk_markdown(test_file, chunk_size=chunk_size)
-
-    # 検証
-    assert len(chunks) == 2
-    assert chunks[0] == "A" * 40
-    assert chunks[1] == "B" * 40
+def test_empty_file(tmp_path):
+    f = tmp_path / "empty.md"
+    f.write_text("", encoding="utf-8")
+    assert chunk_markdown(f) == []
 
 
-def test_chunk_markdown_large_block_fallback(tmp_path):
-    # 巨大な1ブロック（構造的に切れない）がchunk_sizeを超えた場合
-    test_file = tmp_path / "large_block.md"
-    content = "C" * 100
-    test_file.write_text(content, encoding="utf-8")
-
-    chunks = chunk_markdown(test_file, chunk_size=50)
-
-    # 「構造優先」なので 1 になる
-    assert len(chunks) == 1
+def test_no_heading_short(tmp_path):
+    f = tmp_path / "short.md"
+    text = "これは短い本文です。"
+    f.write_text(text, encoding="utf-8")
+    result = chunk_markdown(f, chunk_size=1000)
+    assert result == [text]
 
 
-def test_chunk_markdown_empty_file(tmp_path):
-    # 空ファイルの場合
-    test_file = tmp_path / "empty.md"
-    test_file.write_text("", encoding="utf-8")
+def test_no_heading_long(tmp_path):
+    f = tmp_path / "long.md"
+    # 句点区切りの長いテキスト（見出しなし）
+    text = ("あいうえお。" * 20) + ("かきくけこ。" * 20)
+    f.write_text(text, encoding="utf-8")
+    result = chunk_markdown(f, chunk_size=100, overlap=0, min_chunk=0)
+    assert len(result) >= 2
+    # 見出しプレフィックスはない
+    for chunk in result:
+        assert not chunk.startswith("#")
 
-    chunks = chunk_markdown(test_file)
 
-    assert chunks == []
+def test_single_section_short(tmp_path):
+    f = tmp_path / "section.md"
+    f.write_text("# 見出し\n\n本文テキスト。", encoding="utf-8")
+    result = chunk_markdown(f, chunk_size=1000)
+    assert len(result) == 1
+    assert result[0].startswith("# 見出し")
+    assert "本文テキスト" in result[0]
+
+
+def test_single_section_long(tmp_path):
+    f = tmp_path / "long_section.md"
+    body = "あいうえお。" * 50
+    f.write_text(f"# 長い見出し\n\n{body}", encoding="utf-8")
+    result = chunk_markdown(f, chunk_size=100, overlap=0, min_chunk=0)
+    assert len(result) >= 2
+    # 全チャンクに見出しプレフィックスが付く
+    for chunk in result:
+        assert chunk.startswith("# 長い見出し\n")
+
+
+def test_multiple_sections(tmp_path):
+    f = tmp_path / "multi.md"
+    content = "# セクション1\n\nセクション1の本文。\n\n## セクション2\n\nセクション2の本文。"
+    f.write_text(content, encoding="utf-8")
+    result = chunk_markdown(f, chunk_size=1000)
+    assert len(result) == 2
+    assert "セクション1の本文" in result[0]
+    assert "セクション2の本文" in result[1]
+
+
+def test_heading_only_section(tmp_path):
+    f = tmp_path / "heading_only.md"
+    # 本文なしの見出しはスキップされる
+    content = "# 見出しのみ\n\n## 本文あり\n\n本文テキスト。"
+    f.write_text(content, encoding="utf-8")
+    result = chunk_markdown(f, chunk_size=1000)
+    assert len(result) == 1
+    assert "本文テキスト" in result[0]
+    # 本文なし見出し単体はチャンクにならない
+    assert not any(c.strip() == "# 見出しのみ" for c in result)
+
+
+def test_heading_prefix_repeated(tmp_path):
+    f = tmp_path / "long_with_heading.md"
+    body = "あいうえお。" * 60
+    f.write_text(f"## 繰り返し見出し\n\n{body}", encoding="utf-8")
+    result = chunk_markdown(f, chunk_size=150, overlap=0, min_chunk=0)
+    assert len(result) >= 2
+    for chunk in result:
+        assert chunk.startswith("## 繰り返し見出し\n")
