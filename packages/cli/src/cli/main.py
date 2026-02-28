@@ -23,33 +23,20 @@ def cli():
     required=False,
     type=click.Path(exists=True, file_okay=False, dir_okay=True),
 )
-def init(dir):
+@click.option(
+    "--verbose",
+    "-v",
+    help="verbose log",
+    is_flag=True,
+)
+def init(verbose, dir):
     """init database and download model if not exist"""
-    logger.info("Initializing model.")
-    try:
-        from common.model import EmbeddingModelManager
+    if verbose:
+        setup_logging(level="DEBUG")
 
-        EmbeddingModelManager()
-    except OSError as e:
-        logger.warning("failed to import model. download from online.")
-        import os
-        from common.model import DEFAULT_MODEL_NAME
-        from sentence_transformers import (
-            SentenceTransformer,
-        )
+    from cli.db.init import init_db, init_model
 
-        try:
-            os.environ["TRANSFORMERS_OFFLINE"] = "0"
-            os.environ["HF_DATASETS_OFFLINE"] = "0"
-            SentenceTransformer(DEFAULT_MODEL_NAME)
-
-            os.environ["TRANSFORMERS_OFFLINE"] = "1"
-            os.environ["HF_DATASETS_OFFLINE"] = "1"
-        except e:
-            logger.error(e)
-            logger.critical("failed to load model.")
-            exit(1)
-    from cli.db.init import init_db
+    init_model()
 
     dir = [] if dir is None else dir
     targets = [str(Path(p).resolve()) for p in dir]

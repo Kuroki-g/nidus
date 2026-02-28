@@ -29,7 +29,7 @@ def setup_logging(level="INFO"):
     except ImportError:
         pass
 
-    silence_loggers = ["sentence_transformers", "torch", "httpx"]
+    silence_loggers = ["sentence_transformers", "httpx"]
     for name in silence_loggers:
         tgt = logging.getLogger(name)
         tgt.setLevel(logging.WARNING)

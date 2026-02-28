@@ -54,4 +54,3 @@ MCP クライアント / CLI ← tools.py ← search_db.py（FTS + ベクター 
 - **ハイブリッド検索**: FTS 結果とベクター結果をマージし、FTS マッチを優先して `(source, chunk_id)` で重複排除。
 - **設定** (`packages/common/src/common/config.py`): `DB_PATH`、`TABLE_NAME`、`PORT`（8000）、`HOST`（127.0.0.1）、`SEARCH_LIMIT`（5）は `.env` で上書き可能。
 - **Python バージョン**: 3.14 固定（`.python-version` 参照）。
-- **PyTorch**: CPU のみ、`download.pytorch.org/whl/cpu` からインストール。

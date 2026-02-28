@@ -10,6 +10,25 @@ from common.config import settings
 logger = logging.getLogger(__name__)
 
 
+def init_model():
+    logger.info("Initializing model.")
+    try:
+        from common.model import EmbeddingModelManager
+
+        EmbeddingModelManager()
+    except Exception as _e:
+        logger.warning("failed to load model. downloading from HuggingFace.")
+        from huggingface_hub import snapshot_download
+        from common.model import DEFAULT_MODEL_ID
+
+        try:
+            snapshot_download(DEFAULT_MODEL_ID)
+        except Exception as download_err:
+            logger.error(download_err)
+            logger.critical("failed to download model.")
+            exit(1)
+
+
 def init_db(
     path_list: List[Union[str, Path]],
     table_name: str = settings.TABLE_NAME,
