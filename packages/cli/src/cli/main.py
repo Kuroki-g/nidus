@@ -25,23 +25,10 @@ def cli():
 )
 def init(dir):
     """init database and download model if not exist"""
-    logger.info("Initializing model.")
-    try:
-        from common.model import EmbeddingModelManager
 
-        EmbeddingModelManager()
-    except Exception as _e:
-        logger.warning("failed to load model. downloading from HuggingFace.")
-        from huggingface_hub import snapshot_download
-        from common.model import DEFAULT_MODEL_NAME
+    from cli.db.init import init_db, init_model
 
-        try:
-            snapshot_download(DEFAULT_MODEL_NAME)
-        except Exception as download_err:
-            logger.error(download_err)
-            logger.critical("failed to download model.")
-            exit(1)
-    from cli.db.init import init_db
+    init_model()
 
     dir = [] if dir is None else dir
     targets = [str(Path(p).resolve()) for p in dir]
