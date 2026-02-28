@@ -14,10 +14,18 @@ def cli():
 
 
 @cli.command(name="help")
+@click.argument("command", required=False)
 @click.pass_context
-def help_command(ctx):
-    """Show this help message."""
-    click.echo(ctx.parent.get_help())
+def help_command(ctx, command):
+    """Show help for a command. (e.g. nidus help add)"""
+    if command is None:
+        click.echo(ctx.parent.get_help())
+        return
+    cmd = ctx.parent.command.commands.get(command)
+    if cmd is None:
+        raise click.UsageError(f"No such command: {command!r}")
+    with click.Context(cmd, parent=ctx.parent, info_name=command) as sub_ctx:
+        click.echo(cmd.get_help(sub_ctx))
 
 
 # region cli
