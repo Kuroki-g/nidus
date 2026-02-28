@@ -39,6 +39,7 @@
     ],
     "ask": [
       "Task",
+      "Fetch",
       "WebFetch",
       "Write",
       "mcp__ide__getDiagnostics",
