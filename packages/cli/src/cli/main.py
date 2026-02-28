@@ -3,14 +3,19 @@ from pathlib import Path
 import click
 from common.logger_setup import setup_logging
 
-setup_logging(level="INFO")
+setup_logging(level="WARNING")
 logger = logging.getLogger(__name__)
 
 
 @click.group()
-def cli():
+@click.option("--verbose", "-v", is_flag=True, help="Show INFO logs")
+@click.option("--debug", is_flag=True, help="Show DEBUG logs")
+def cli(verbose, debug):
     """Nidus - Japanese local document search engine"""
-    pass
+    if debug:
+        setup_logging(level="DEBUG")
+    elif verbose:
+        setup_logging(level="INFO")
 
 
 @cli.command(name="help")
@@ -37,17 +42,8 @@ def help_command(ctx, command):
     required=False,
     type=click.Path(exists=True, file_okay=False, dir_okay=True),
 )
-@click.option(
-    "--verbose",
-    "-v",
-    help="verbose log",
-    is_flag=True,
-)
-def init(verbose, dir):
+def init(dir):
     """init database and download model if not exist"""
-    if verbose:
-        setup_logging(level="DEBUG")
-
     from cli.db.init import init_db, init_model
 
     init_model()
