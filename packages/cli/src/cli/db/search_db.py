@@ -52,7 +52,7 @@ def list_docs_in_db(keyword: str | None) -> List[SearchResult]:
             table.search().select(["source", "chunk_id", "text"]).where("chunk_id = 0")
         )
         if keyword is not None:
-            query = query.where("source LIKE '%{keyword}%'")
+            query = query.where(f"source LIKE '%{keyword}%'")
         results = query.limit(settings.SEARCH_LIMIT * 10).to_list()
 
         if not results:
