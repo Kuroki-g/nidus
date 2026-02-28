@@ -14,6 +14,7 @@ dependencies = [
     "platformdirs>=4.9.2",
     "model2vec>=0.7.0",
     "huggingface-hub>=1.4.1",
+    "common",
 ]
 
 [tool.uv]
@@ -39,4 +40,5 @@ nidus-mcp = "mcp_server.main:main"
 
 [tool.uv.sources]
 mcp-server = { workspace = true }
+common = { workspace = true }
 cli = { workspace = true }
