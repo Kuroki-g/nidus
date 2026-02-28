@@ -27,6 +27,14 @@ uv run pytest packages/cli/tests/processor/test_markdown_processor.py
 ./build-container.sh
 ```
 
+## 開発方針
+
+コンセプト: **「AI が使いやすい日本語ローカル検索エンジン」**
+
+差別化の軸: 日本語精度 × AI可読性 × 軽量・ローカル。MCP は AI クライアント向けのアダプター層に過ぎず、コアは `packages/cli` の検索エンジン部分にある。
+
+現在の優先事項: **Milestone 1（AI可読性の改善）** → 詳細は `ROADMAP.md` を参照。
+
 ## 規約
 
 - `python` / `pip` は直接使わず、`uv run` / `uv add` / `uv remove` を使う
