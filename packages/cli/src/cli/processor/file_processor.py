@@ -8,6 +8,7 @@ import numpy as np
 from common.model import EmbeddingModelManager
 from cli.processor.markdown_processor import chunk_markdown
 from cli.processor.pdf_processor import chunk_pdf
+from cli.processor.plain_text_processor import chunk_asciidoc, chunk_plain_text
 
 
 model = EmbeddingModelManager()
@@ -19,14 +20,6 @@ def get_embedding(text):
     return model.model.encode(
         text, show_progress_bar=False, convert_to_numpy=True
     ).astype(np.float32)
-
-
-def chunk_asciidoc(path: Path, chunk_size=500):
-    raise NotImplementedError()
-
-
-def chunk_plain_text(path: Path, chunk_size=500):
-    raise NotImplementedError()
 
 
 CHUNK_STRATEGIES: dict[str, Callable[[Path], List[str]]] = {
