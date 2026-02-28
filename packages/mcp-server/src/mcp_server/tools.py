@@ -5,7 +5,7 @@ from typing import List
 from common.format import format_mes
 from mcp.server import FastMCP
 
-from cli.db.search_db import search_docs_in_db, SearchMethod
+from cli.db.search_db import search_docs_in_db
 from cli.db.update_db import update_files_in_db
 
 logger = logging.getLogger(__name__)
@@ -35,31 +35,16 @@ def search_docs(keyword: str) -> str:
         if not unique_results:
             return f"'{keyword}' was not found."
 
-        # 1. 検索手法ごとにグループ化
-        keyword_matches = [
-            r for r in unique_results if r["method"] == SearchMethod.Keyword
-        ]
-        semantic_matches = [
-            r for r in unique_results if r["method"] == SearchMethod.Semantic
-        ]
-
-        # 2. Keywordを優先して最大5件抽出
-        # まずKeywordを入れ、足りない枠（5 - len）をSemanticから取得
-        display_results = keyword_matches[:5]
-
-        if len(display_results) < 5:
-            needed = 5 - len(display_results)
-            display_results.extend(semantic_matches[:needed])
-
-        # 3. テキスト整形
-        output = []  # リストを初期化
-        for row in display_results:
+        # RRF スコアで既にソート済みなのでそのまま使用
+        output = []
+        for row in unique_results:
             source = row["source"]
             search_method = row["method"]
+            score = row.get("score", 0.0)
             text_snippet = row.get("text", "").replace("\n", " ")[:300]
 
             output.append(
-                f"--- source: {source} [{search_method}] ---\n{text_snippet}...\n"
+                f"--- source: {source} [{search_method.name}] (score: {score:.4f}) ---\n{text_snippet}...\n"
             )
 
         return "\n".join(output)
@@ -74,14 +59,13 @@ def list_docs(keyword: str) -> str:
         results = list_docs_in_db(keyword)
 
         if not results:
-            return f"source match to {keyword}' was not found."
+            return f"source match to '{keyword}' was not found."
 
         output = []
         for row in results:
             source = row["source"]
-            text_snippet = row.get("text", "").replace("\n", " ")[:300]
-
-            output.append(f"--- source: {source} ---\n{text_snippet}...\n")
+            doc_name = row.get("doc_name", "")
+            output.append(f"{source}  ({doc_name})")
         return "\n".join(output)
     except Exception as e:
         return format_mes(str(e))

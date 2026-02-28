@@ -25,9 +25,8 @@ def get_single_doc(path: str) -> str:
         output = []
         for row in results:
             source = row["source"]
-            text_snippet = row.get("text", "").replace("\n", " ")[:300]
-
-            output.append(f"--- source: {source} ---\n{text_snippet}...\n")
+            doc_name = row.get("doc_name", "")
+            output.append(f"{source}  ({doc_name})")
         return "\n".join(output)
     except Exception as e:
         return format_mes(str(e))

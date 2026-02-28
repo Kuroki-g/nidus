@@ -13,17 +13,20 @@ logger = logging.getLogger(__name__)
 
 def delete_files_in_db(
     path_list: List[Path],
-    table_name: str = settings.TABLE_NAME,
     db_path=settings.DB_PATH,
 ):
     """
-    Delete assigned file and update contents.
+    Delete assigned file records from all tables.
     """
-    db = LanceDBManager(db_path).db
-    table = db.open_table(table_name)
+    from cli.db.schemas import schema_names
 
-    # delete target file record
+    db = LanceDBManager(db_path).db
+    doc_meta_table = db.open_table(schema_names.doc_meta)
+    doc_chunk_table = db.open_table(schema_names.doc_chunk)
+
     paths_str = ", ".join([f"'{str(p)}'" for p in flatten_path_to_file(path_list)])
     delete_query = f"source IN ({paths_str})"
-    table.delete(delete_query)
-    logger.info(f"Deleted old data for: {paths_str}")
+
+    doc_meta_table.delete(delete_query)
+    doc_chunk_table.delete(delete_query)
+    logger.info(f"Deleted records for: {paths_str}")
