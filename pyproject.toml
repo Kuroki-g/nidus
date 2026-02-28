@@ -8,12 +8,12 @@ dependencies = [
     "mcp[cli]>=1.26.0",
     "pydantic>=2.12.5",
     "lancedb>=0.29.2",
-    "sentence-transformers>=3.3.1",
-    "torch",
     "mcp-server",
     "cli",
     "pyarrow>=23.0.1",
     "platformdirs>=4.9.2",
+    "model2vec>=0.7.0",
+    "huggingface-hub>=1.4.1",
 ]
 
 [tool.uv]
@@ -37,11 +37,6 @@ include = ["packages*"]
 nidus = "cli.main:main"
 nidus-mcp = "mcp_server.main:main"
 
-[[tool.uv.index]]
-name = "pytorch"
-url = "https://download.pytorch.org/whl/cpu"
-
 [tool.uv.sources]
-torch = { index = "pytorch" }
 mcp-server = { workspace = true }
 cli = { workspace = true }

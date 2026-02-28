@@ -1,11 +1,8 @@
 import logging
-import os
-from sentence_transformers import SentenceTransformer
+from huggingface_hub import snapshot_download
+from model2vec import StaticModel
 
 logger = logging.getLogger(__name__)
-
-os.environ["TRANSFORMERS_OFFLINE"] = "1"
-os.environ["HF_DATASETS_OFFLINE"] = "1"
 
 # https://huggingface.co/hotchpotch/static-embedding-japanese
 DEFAULT_MODEL_NAME = "hotchpotch/static-embedding-japanese"
@@ -19,17 +16,16 @@ class EmbeddingModelManager:
 
     def __new__(cls):
         if cls._instance is None:
-            logger.debug("initializing database.")
+            logger.debug("initializing model.")
             cls._instance = super(EmbeddingModelManager, cls).__new__(cls)
-            model_name = DEFAULT_MODEL_NAME
-            cls._model = SentenceTransformer(model_name, local_files_only=True)
-            vector_size = MODEL_VECTOR_SIZE
-            cls._vector_size = vector_size
-            logger.info("initializing database done.")
+            local_path = snapshot_download(DEFAULT_MODEL_NAME, local_files_only=True)
+            cls._model = StaticModel.from_sentence_transformers(local_path)
+            cls._vector_size = MODEL_VECTOR_SIZE
+            logger.info("initializing model done.")
         return cls._instance
 
     @property
-    def model(self) -> SentenceTransformer:
+    def model(self) -> StaticModel:
         return self._model
 
     @property

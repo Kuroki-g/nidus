@@ -30,24 +30,16 @@ def init(dir):
         from common.model import EmbeddingModelManager
 
         EmbeddingModelManager()
-    except OSError as e:
-        logger.warning("failed to import model. download from online.")
-        import os
+    except Exception as _e:
+        logger.warning("failed to load model. downloading from HuggingFace.")
+        from huggingface_hub import snapshot_download
         from common.model import DEFAULT_MODEL_NAME
-        from sentence_transformers import (
-            SentenceTransformer,
-        )
 
         try:
-            os.environ["TRANSFORMERS_OFFLINE"] = "0"
-            os.environ["HF_DATASETS_OFFLINE"] = "0"
-            SentenceTransformer(DEFAULT_MODEL_NAME)
-
-            os.environ["TRANSFORMERS_OFFLINE"] = "1"
-            os.environ["HF_DATASETS_OFFLINE"] = "1"
-        except e:
-            logger.error(e)
-            logger.critical("failed to load model.")
+            snapshot_download(DEFAULT_MODEL_NAME)
+        except Exception as download_err:
+            logger.error(download_err)
+            logger.critical("failed to download model.")
             exit(1)
     from cli.db.init import init_db
 
