@@ -7,7 +7,6 @@
 ```bash
 # セットアップ
 uv sync
-source .venv/bin/activate
 
 # CLI 実行
 nidus --help
@@ -19,18 +18,22 @@ nidus search "キーワード"
 nidus-mcp
 
 # テスト実行
-pytest
+uv run pytest
 
 # 単一テストファイルの実行
-pytest packages/cli/tests/processor/test_markdown_processor.py
+uv run pytest packages/cli/tests/processor/test_markdown_processor.py
 
 # リント / フォーマット
-ruff check .
-ruff format .
+uv run ruff check .
+uv run ruff format .
 
 # Docker イメージビルド
 ./build-container.sh
 ```
+
+## 規約
+
+- `python` / `pip` は直接使わず、`uv run` / `uv add` / `uv remove` を使う
 
 ## アーキテクチャ
 
