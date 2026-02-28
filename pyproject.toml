@@ -5,13 +5,12 @@ description = "Nidus: open-source document store database"
 readme = "README.md"
 requires-python = "==3.14.*"
 dependencies = [
-    "mcp[cli]>=1.26.0",
+    "mcp>=1.26.0",
     "pydantic>=2.12.5",
     "lancedb>=0.29.2",
     "mcp-server",
     "cli",
     "pyarrow>=23.0.1",
-    "platformdirs>=4.9.2",
     "model2vec>=0.7.0",
     "huggingface-hub>=1.4.1",
     "common",

@@ -5,7 +5,7 @@ import sys
 from typing import Dict, Any, List
 
 OVERRIDE_PACKAGES = {}
-IGNORE_PACKAGES = ["common", "cli", "nidus-mcp", "mcp-server"]
+IGNORE_PACKAGES = ["common", "cli", "nidus-mcp", "mcp-server", "nidus"]
 
 SAFE_LICENSES = [
     "Apache Software License",
@@ -21,6 +21,8 @@ SAFE_LICENSES = [
     "PSF-2.0",
     "BSD License",
     "BSD-3-Clause",
+    "Apache-2.0 OR BSD-2-Clause",
+    "MPL-2.0 AND MIT",
 ]
 
 

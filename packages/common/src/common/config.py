@@ -1,13 +1,19 @@
 import logging
+import os
 from pathlib import Path
 
-from platformdirs import user_cache_dir
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+def _default_cache_dir(app_name: str) -> Path:
+    xdg = os.environ.get("XDG_CACHE_HOME")
+    base = Path(xdg) if xdg else Path.home() / ".cache"
+    return base / app_name
 
 
 class Settings(BaseSettings):
     APP_NAME: str = "nidus"
-    APP_CACHE_DIR: Path = Path(user_cache_dir(APP_NAME)).resolve()
+    APP_CACHE_DIR: Path = _default_cache_dir(APP_NAME)
     DB_PATH: Path = APP_CACHE_DIR / ".lancedb"
     TABLE_NAME: str = "docs"
     PORT: int = 8000
