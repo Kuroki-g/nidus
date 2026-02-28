@@ -85,14 +85,18 @@ def search_docs_in_db(keyword: str) -> List[SearchResult]:
         table = db.open_table(schema_names.doc_chunk)
 
         # 1. FTS search
+        # TODO: "_score" は lance の autoprojection 警告を抑制するための workaround。
+        #       lancedb Python API に disable_scoring_autoprojection() が公開されたら
+        #       "_score" を select から除いてそちらに切り替える。
         fts_results = (
             table.search(keyword, query_type="fts")
-            .select(["source", "chunk_id", "chunk_text"])
+            .select(["source", "chunk_id", "chunk_text", "_score"])
             .limit(settings.SEARCH_LIMIT)
             .to_list()
         )
 
         # 2. Vector search
+        # TODO: "_distance" も同様の workaround。上記と同タイミングで解消する。
         model = EmbeddingModelManager().model
         query_embed = model.encode(
             keyword, show_progress_bar=False, convert_to_numpy=True
@@ -100,7 +104,7 @@ def search_docs_in_db(keyword: str) -> List[SearchResult]:
 
         vector_results = (
             table.search(query_embed, vector_column_name="vector")
-            .select(["source", "chunk_id", "chunk_text"])
+            .select(["source", "chunk_id", "chunk_text", "_distance"])
             .limit(settings.SEARCH_LIMIT)
             .to_list()
         )
