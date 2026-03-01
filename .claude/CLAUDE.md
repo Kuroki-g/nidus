@@ -39,6 +39,22 @@ uv run pytest packages/cli/tests/processor/test_markdown_processor.py
 
 - `python` / `pip` は直接使わず、`uv run` / `uv add` / `uv remove` を使う
 
+## ネットワーク制限
+
+devcontainer 内は squid プロキシ（`http://http-proxy:3128`）経由のみアクセス可能。WebFetch はホワイトリスト外ドメインでは失敗する。
+
+**許可ドメイン:**
+- `.anthropic.com` / `claude.ai` — Anthropic サービス
+- `.github.com` / `.githubusercontent.com` — コード参照
+- `.pypi.org` / `.pythonhosted.org` — Python パッケージ
+- `.huggingface.co` — ML モデル
+- `docs.rs` — Rust クレートドキュメント
+- `docs.python.org` — Python 標準ライブラリ
+- `docs.astral.sh` — uv / ruff ドキュメント
+- `docs.pydantic.dev` — Pydantic ドキュメント
+- `modelcontextprotocol.io` — MCP プロトコル仕様
+- `.qiita.com` / `.zenn.dev` — 日本語技術記事
+
 ## アーキテクチャ
 
 `uv` ワークスペースのモノレポで、`packages/` 配下に 3 つのパッケージがある。
