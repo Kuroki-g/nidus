@@ -5,19 +5,26 @@ description = "Nidus: open-source document store database"
 readme = "README.md"
 requires-python = "==3.14.*"
 dependencies = [
-    "mcp>=1.26.0",
-    "pydantic>=2.12.5",
-    "lancedb>=0.29.2",
     "mcp-server",
     "cli",
-    "pyarrow>=23.0.1",
-    "model2vec>=0.7.0",
-    "huggingface-hub>=1.4.1",
     "common",
 ]
 
 [tool.uv]
 package = true
+constraint-dependencies = [
+    "pydantic-settings>=2.13.1",
+    "lancedb>=0.29.2",
+    "pyarrow>=23.0.1",
+    "model2vec>=0.7.0",
+    "huggingface-hub>=1.4.1",
+    "mcp>=1.26.0",
+    "mistune>=3.2.0",
+    "pypdf>=6.7.1",
+    "pdfminer-six>=20260107",
+    "click>=8.3.1",
+    "watchdog>=6.0.0",
+]
 
 [tool.uv.workspace]
 members = ["packages/*"]
