@@ -9,14 +9,19 @@ ARG NODE_MAJOR=22
 
 RUN apt-get update \
   && apt-get install -y --no-install-recommends \
+  bash-completion \
   ca-certificates \
   curl \
   git \
   gnupg \
-  less \
+  iproute2 \
   jq \
-  unzip \
+  less \
+  lsof \
   nano \
+  socat \
+  tree \
+  unzip \
   xclip \
   zip \
   && rm -rf /var/lib/apt/lists/*

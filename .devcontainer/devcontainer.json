@@ -5,6 +5,12 @@
   "workspaceFolder": "/workspace",
   "service": "claude-dev",
   "postCreateCommand": "uv sync",
+  "forwardPorts": [],
+  "portsAttributes": {
+    "30000-50000": {
+      "onAutoForward": "silent"
+    }
+  },
   "customizations": {
     "vscode": {
       "extensions": [

@@ -2,7 +2,7 @@ services:
   http-proxy:
     image: ubuntu/squid:6.13-25.04_beta
     restart: unless-stopped
-    command: ["squid", "-N", "-d", "1"]
+    command: ["squid", "-N"]
     ports:
       - "3128:3128"
 
@@ -64,9 +64,8 @@ services:
 
     volumes:
       - ..:/workspace:cached
-      - ${HOME}/.claude:/home/developer/.claude:ro
-      - uv-cache:/home/developer/.cache/uv
-      - npm-cache:/home/developer/.npm
+      - ${HOME}/.claude:/home/vscode/.claude
+      - ${HOME}/.cache/uv:/home/vscode/.cache/uv
       - /etc/localtime:/etc/localtime:ro
 
     user: "1000:1000"
@@ -89,6 +88,4 @@ networks:
     driver: bridge
 
 volumes:
-  uv-cache:
-  npm-cache:
   squid-logs:
