@@ -9,6 +9,7 @@ dependencies = [
     "pypdf>=6.7.1",
     "pdfminer-six>=20260107",
     "click>=8.3.1",
+    "watchdog>=6.0.0",
 ]
 
 [project.scripts]
