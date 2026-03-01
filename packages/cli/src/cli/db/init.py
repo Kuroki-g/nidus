@@ -36,9 +36,8 @@ def init_db(
     Read documents from target directory.
     """
 
-    doc_meta_table, doc_chunk_table = create_db_schemas()
+    create_db_schemas()
     update_files_in_db(path_list)
-    doc_chunk_table.create_fts_index("chunk_text", replace=True)
     logger.info("Database initialized and FTS index created for doc_chunk table.")
 
 

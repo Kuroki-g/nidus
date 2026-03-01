@@ -20,6 +20,8 @@ class Settings(BaseSettings):
     HOST: str = "127.0.0.1"
     LOG_LEVEL: int = logging.INFO
     SEARCH_LIMIT: int = 5
+    SEARCH_RRF_K: int = 60
+    SEARCH_ADJACENT_WINDOW: int = 1
 
     model_config = SettingsConfigDict(
         env_file=".env", env_file_encoding="utf-8", case_sensitive=False

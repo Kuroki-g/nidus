@@ -9,7 +9,8 @@ import numpy as np
 
 logger = logging.getLogger(__name__)
 
-_RRF_K = 60
+# FTS bigram requires at least 2 characters to form a token
+_FTS_MIN_QUERY_LENGTH = 2
 
 
 class SearchMethod(Enum):
@@ -31,11 +32,11 @@ class DocListEntry(TypedDict):
     doc_name: str
 
 
-def _rrf_score(rank: int, k: int = _RRF_K) -> float:
+def _rrf_score(rank: int, k: int) -> float:
     return 1.0 / (k + rank + 1)
 
 
-def _get_adjacent_text(table, source: str, chunk_id: int, window: int = 1) -> str:
+def _get_adjacent_text(table, source: str, chunk_id: int, window: int) -> str:
     """Fetch chunk_id-window to chunk_id+window and concatenate as context."""
     lo = max(0, chunk_id - window)
     hi = chunk_id + window
@@ -84,16 +85,26 @@ def search_docs_in_db(keyword: str) -> List[SearchResult]:
     try:
         table = db.open_table(schema_names.doc_chunk)
 
-        # 1. FTS search
+        rrf_k = settings.SEARCH_RRF_K
+        adjacent_window = settings.SEARCH_ADJACENT_WINDOW
+
+        # 1. FTS search (bigram requires at least 2 characters)
         # TODO: "_score" は lance の autoprojection 警告を抑制するための workaround。
         #       lancedb Python API に disable_scoring_autoprojection() が公開されたら
         #       "_score" を select から除いてそちらに切り替える。
-        fts_results = (
-            table.search(keyword, query_type="fts")
-            .select(["source", "chunk_id", "chunk_text", "_score"])
-            .limit(settings.SEARCH_LIMIT)
-            .to_list()
-        )
+        use_fts = len(keyword.strip()) >= _FTS_MIN_QUERY_LENGTH
+        if use_fts:
+            fts_results = (
+                table.search(keyword, query_type="fts")
+                .select(["source", "chunk_id", "chunk_text", "_score"])
+                .limit(settings.SEARCH_LIMIT)
+                .to_list()
+            )
+        else:
+            logger.debug(
+                f"FTS skipped: query '{keyword}' is shorter than {_FTS_MIN_QUERY_LENGTH} characters."
+            )
+            fts_results = []
 
         # 2. Vector search
         # TODO: "_distance" も同様の workaround。上記と同タイミングで解消する。
@@ -115,12 +126,12 @@ def search_docs_in_db(keyword: str) -> List[SearchResult]:
 
         for rank, row in enumerate(fts_results):
             key = (row["source"], row["chunk_id"])
-            scores[key] = scores.get(key, 0.0) + _rrf_score(rank)
+            scores[key] = scores.get(key, 0.0) + _rrf_score(rank, rrf_k)
             methods[key] = SearchMethod.Keyword
 
         for rank, row in enumerate(vector_results):
             key = (row["source"], row["chunk_id"])
-            scores[key] = scores.get(key, 0.0) + _rrf_score(rank)
+            scores[key] = scores.get(key, 0.0) + _rrf_score(rank, rrf_k)
             if key in methods:
                 methods[key] = SearchMethod.Hybrid
             else:
@@ -131,7 +142,7 @@ def search_docs_in_db(keyword: str) -> List[SearchResult]:
 
         unique_results: List[SearchResult] = []
         for source, chunk_id in sorted_keys[: settings.SEARCH_LIMIT]:
-            text = _get_adjacent_text(table, source, chunk_id)
+            text = _get_adjacent_text(table, source, chunk_id, adjacent_window)
             result: SearchResult = {
                 "method": methods[(source, chunk_id)],
                 "text": text,

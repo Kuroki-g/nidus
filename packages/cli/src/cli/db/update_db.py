@@ -13,6 +13,21 @@ from common.os_utils import flatten_path_to_file
 logger = logging.getLogger(__name__)
 
 
+def create_chunk_fts_index(table) -> None:
+    """Create FTS index on chunk_text with Japanese-optimized bigram tokenizer."""
+    table.create_fts_index(
+        "chunk_text",
+        replace=True,
+        base_tokenizer="ngram",
+        ngram_min_length=2,
+        ngram_max_length=2,
+        lower_case=False,
+        stem=False,
+        remove_stop_words=False,
+        ascii_folding=False,
+    )
+
+
 def update_files_in_db(
     path_list: List[Path],
     db_path=settings.DB_PATH,
@@ -55,16 +70,6 @@ def update_files_in_db(
 
     # write doc_chunk records
     doc_chunk_table.add(data_generator(path_list))
-    doc_chunk_table.create_fts_index(
-        "chunk_text",
-        replace=True,
-        base_tokenizer="ngram",
-        ngram_min_length=2,
-        ngram_max_length=2,
-        lower_case=False,
-        stem=False,
-        remove_stop_words=False,
-        ascii_folding=False,
-    )
+    create_chunk_fts_index(doc_chunk_table)
 
     logger.info("Database update and FTS index optimization complete.")
