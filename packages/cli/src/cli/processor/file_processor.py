@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Callable, Iterable, List, Optional, Union
 import numpy as np
 from common.model import EmbeddingModelManager
+from cli.processor.html_processor import chunk_html
 from cli.processor.markdown_processor import chunk_markdown
 from cli.processor.pdf_processor import chunk_pdf
 from cli.processor.plain_text_processor import chunk_asciidoc, chunk_plain_text
@@ -27,6 +28,8 @@ CHUNK_STRATEGIES: dict[str, Callable[[Path], List[str]]] = {
     ".adoc": lambda path: chunk_asciidoc(path),
     ".txt": lambda path: chunk_plain_text(path),
     ".pdf": lambda path: chunk_pdf(path),
+    ".html": lambda path: chunk_html(path),
+    ".htm": lambda path: chunk_html(path),
 }
 
 
