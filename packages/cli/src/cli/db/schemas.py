@@ -1,3 +1,4 @@
+import hashlib
 from pathlib import Path
 
 import pyarrow as pa
@@ -24,6 +25,7 @@ def get_doc_meta_schema_fields():
         *_doc_index_fields(),
         pa.field("created", pa.date32()),
         pa.field("updated", pa.date32()),
+        pa.field("file_hash", pa.string()),
     ]
 
     return fields
@@ -55,8 +57,6 @@ def get_doc_chunk_schema(vector_size: int):
 
 
 def get_file_hash(file_path: Path, algorithm="sha256"):
-    import hashlib
-
     hash_func = hashlib.new(algorithm)
 
     with open(file_path, "rb") as f:

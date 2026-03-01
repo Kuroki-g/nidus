@@ -28,48 +28,91 @@ def create_chunk_fts_index(table) -> None:
     )
 
 
+def _get_existing_meta(doc_meta_table, files: List[Path]) -> dict[str, dict]:
+    """Return {source: {created, file_hash}} for files already in doc_meta."""
+    if not files:
+        return {}
+
+    paths_str = ", ".join([f"'{str(p)}'" for p in files])
+    try:
+        rows = (
+            doc_meta_table.search()
+            .where(f"source IN ({paths_str})", prefilter=True)
+            .select(["source", "created", "file_hash"])
+            .to_list()
+        )
+    except Exception as e:
+        logger.warning(f"Could not query existing metadata (treating all as new): {e}")
+        return {}
+
+    return {r["source"]: {"created": r["created"], "file_hash": r["file_hash"]} for r in rows}
+
+
 def update_files_in_db(
     path_list: List[Path],
     db_path=settings.DB_PATH,
-):
+) -> None:
     """
-    Delete assigned file records and re-insert updated contents.
+    Re-index only files whose content has changed (hash-based incremental update).
+    Unchanged files are skipped. The original `created` date is preserved on update.
     """
-    from cli.db.schemas import schema_names
+    from cli.db.schemas import schema_names, get_file_hash
 
     db = LanceDBManager(db_path).db
     doc_meta_table = db.open_table(schema_names.doc_meta)
     doc_chunk_table = db.open_table(schema_names.doc_chunk)
 
-    # collect actual file paths
-    files = list(flatten_path_to_file(path_list))
+    files = [
+        f
+        for f in flatten_path_to_file(path_list)
+        if f.suffix.lower() in CHUNK_STRATEGIES
+    ]
     if not files:
         logger.warning("No valid files found.")
         return
 
-    paths_str = ", ".join([f"'{str(p)}'" for p in files])
-    delete_query = f"source IN ({paths_str})"
+    existing = _get_existing_meta(doc_meta_table, files)
 
+    # Classify files and cache hashes to avoid reading each file twice
+    changed: list[tuple[Path, str, dict | None]] = []  # (path, hash, stored_meta)
+    skipped = 0
+    for f in files:
+        current_hash = get_file_hash(f)
+        stored = existing.get(str(f))
+        if stored and stored["file_hash"] == current_hash:
+            skipped += 1
+        else:
+            changed.append((f, current_hash, stored))
+
+    if skipped:
+        logger.info(f"Skipped {skipped} unchanged file(s).")
+    if not changed:
+        logger.info("All files are up to date. Nothing to do.")
+        return
+
+    changed_paths = [f for f, _, _ in changed]
+
+    # Delete old records for changed files only
+    paths_str = ", ".join([f"'{str(p)}'" for p in changed_paths])
+    delete_query = f"source IN ({paths_str})"
     doc_meta_table.delete(delete_query)
     doc_chunk_table.delete(delete_query)
-    logger.info(f"Deleted old records for: {paths_str}")
+    logger.info(f"Re-indexing {len(changed)} changed file(s).")
 
-    # write doc_meta records (supported files only)
     today = date.today()
     meta_records = [
         {
-            "source": str(f.absolute()),
+            "source": str(f),
             "doc_name": f.name,
-            "created": today,
+            "created": stored["created"] if stored else today,
             "updated": today,
+            "file_hash": current_hash,
         }
-        for f in files
-        if f.suffix.lower() in CHUNK_STRATEGIES
+        for f, current_hash, stored in changed
     ]
     doc_meta_table.add(meta_records)
 
-    # write doc_chunk records
-    doc_chunk_table.add(data_generator(path_list))
+    doc_chunk_table.add(data_generator(changed_paths))
     create_chunk_fts_index(doc_chunk_table)
 
     logger.info("Database update and FTS index optimization complete.")
