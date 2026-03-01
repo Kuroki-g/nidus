@@ -1,9 +1,9 @@
 # nidus
 
 **Nidus** は日本語に最適化されたローカル文書検索エンジンです。
-AI エージェント（Claude、Cursor など）から MCP 経由で使うことを想定して設計されています。
+Claude Code・Gemini CLI などの AI エージェントが Bash ツール経由で `nidus search` を直接呼び出すことを主なユースケースとして設計されています。MCP サーバーとしても起動でき、MCP 対応クライアントからも利用できます。
 
-Markdown・PDF・テキスト・AsciiDoc をチャンクに分割してインデックスし、FTS + ベクターのハイブリッド検索で結果を返します。
+Markdown・PDF・テキスト・AsciiDoc・HTML をチャンクに分割してインデックスし、FTS + ベクターのハイブリッド検索で結果を返します。
 
 ## Features
 
@@ -11,7 +11,7 @@ Markdown・PDF・テキスト・AsciiDoc をチャンクに分割してインデ
 - **ハイブリッド検索**: FTS + ベクター検索を RRF (Reciprocal Rank Fusion) でスコアリング・統合
 - **Adjacent chunks**: ヒットチャンクの前後を結合してスニペットを生成し、AI に十分な文脈を渡す
 - **完全ローカル**: `nidus init` でモデルをキャッシュ後はオフライン動作
-- **MCP 対応**: HTTP トランスポートで AI クライアントからそのまま利用可能
+- **MCP 対応**: `nidus-mcp` で HTTP トランスポートの MCP サーバーとして起動可能（サブ機能）
 
 ## Supported File Types
 
@@ -21,6 +21,7 @@ Markdown・PDF・テキスト・AsciiDoc をチャンクに分割してインデ
 | `.adoc` | 見出し単位でセクション分割 → 文境界チャンク化 |
 | `.txt` | 文境界チャンク化 |
 | `.pdf` | テキスト抽出 (pypdf / pdfminer フォールバック) → 文境界チャンク化 |
+| `.html` / `.htm` | テキスト抽出 (html.parser) → 文境界チャンク化 |
 
 ## Quick Start
 
@@ -70,6 +71,15 @@ AI クライアントの設定に追記します（例: Claude Code `settings.js
 
 ## CLI Commands
 
+グローバルオプション（全コマンド共通）:
+
+| オプション | 説明 |
+|-----------|------|
+| `-v` / `--verbose` | INFO ログを表示 |
+| `--debug` | DEBUG ログを表示 |
+
+コマンド一覧:
+
 | コマンド | 説明 |
 |---------|------|
 | `nidus init [--dir DIR]` | DB 初期化・モデルダウンロード。`--dir` でファイルも同時追加可 |
@@ -97,6 +107,8 @@ AI クライアントの設定に追記します（例: Claude Code `settings.js
 ```env
 DB_PATH=~/.cache/nidus/.lancedb   # DB 保存先
 SEARCH_LIMIT=5                     # 検索結果の最大件数
+SEARCH_RRF_K=60                    # RRF スコアリングの k パラメータ
+SEARCH_ADJACENT_WINDOW=1           # Adjacent chunks の前後ウィンドウ幅（チャンク数）
 PORT=8000                          # MCP サーバーポート
 HOST=127.0.0.1                     # MCP サーバーホスト
 ```
@@ -106,6 +118,7 @@ HOST=127.0.0.1                     # MCP サーバーホスト
 - **埋め込みモデル**: `hotchpotch/static-embedding-japanese` (model2vec, 1024 次元)
 - **ベクター DB**: LanceDB
 - **チャンク設定**: `chunk_size=1000 / overlap=150 / min_chunk=200`
+- **FTS**: bigram（ngram）トークナイザーによる日本語全文検索
 - **ランキング**: RRF (k=60) で FTS・ベクター検索結果を統合
 - **Python**: 3.14 / パッケージ管理: uv ワークスペース
 
