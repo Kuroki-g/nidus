@@ -18,6 +18,7 @@ RUN apt-get update \
   jq \
   less \
   lsof \
+  make \
   nano \
   socat \
   tree \
