@@ -8,6 +8,8 @@ from cli.db.delete_db_record import delete_files_in_db
 from cli.db.schemas import get_doc_chunk_schema, get_doc_meta_schema, schema_names
 from common.lance_db_manager import LanceDBManager
 
+pytestmark = pytest.mark.medium
+
 
 @pytest.fixture(autouse=True)
 def reset_lance_singleton():

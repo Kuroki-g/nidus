@@ -37,6 +37,13 @@ dev = [
     "ruff>=0.15.2",
 ]
 
+[tool.pytest.ini_options]
+markers = [
+    "small: no I/O, no network, single process",
+    "medium: local file or LanceDB access allowed, no external network",
+    "large: external services and network allowed",
+]
+
 [tool.setuptools.packages.find]
 include = ["packages*"]
 

@@ -1,4 +1,8 @@
+import pytest
+
 from cli.db.init import create_db_schemas
+
+pytestmark = pytest.mark.medium
 
 
 def test_create_db_schemas(tmp_path):

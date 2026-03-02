@@ -1,5 +1,8 @@
-from common.os_utils import flatten_path_to_file
 import pytest
+
+from common.os_utils import flatten_path_to_file
+
+pytestmark = pytest.mark.medium
 
 
 @pytest.fixture

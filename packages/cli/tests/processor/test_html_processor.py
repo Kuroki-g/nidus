@@ -1,4 +1,8 @@
+import pytest
+
 from cli.processor.html_processor import chunk_html
+
+pytestmark = pytest.mark.medium
 
 
 def test_empty_file(tmp_path):

@@ -1,4 +1,8 @@
+import pytest
+
 from cli.processor.markdown_processor import chunk_markdown
+
+pytestmark = pytest.mark.medium
 
 
 def test_empty_file(tmp_path):

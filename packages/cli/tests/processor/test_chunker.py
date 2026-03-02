@@ -1,4 +1,8 @@
+import pytest
+
 from cli.processor.chunker import sentence_boundary_chunker
+
+pytestmark = pytest.mark.small
 
 
 def test_empty_text():

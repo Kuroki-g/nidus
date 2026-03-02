@@ -1,6 +1,9 @@
 import pytest
 from pathlib import Path
+
 from cli.processor.pdf_processor import chunk_pdf
+
+pytestmark = pytest.mark.medium
 
 DATA_DIR = Path(__file__).parent.parent / "data"
 SAMPLE_PDF = DATA_DIR / "社内ナレッジベース.pdf"
