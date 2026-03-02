@@ -45,6 +45,7 @@
       "Bash(jq*)",
       "Bash(tree*)",
       "Bash(lsof*)",
+      "Bash(wc*)",
       "Edit",
       "Bash(nidus --help*)",
       "Bash(nidus init*)",
