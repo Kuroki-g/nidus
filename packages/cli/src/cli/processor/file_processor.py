@@ -12,13 +12,20 @@ from cli.processor.pdf_processor import chunk_pdf
 from cli.processor.plain_text_processor import chunk_asciidoc, chunk_plain_text
 
 
-model = EmbeddingModelManager()
+_model: EmbeddingModelManager | None = None
 logger = logging.getLogger(__name__)
 logging.getLogger("pdfminer").setLevel(logging.ERROR)
 
 
+def _get_model() -> EmbeddingModelManager:
+    global _model
+    if _model is None:
+        _model = EmbeddingModelManager()
+    return _model
+
+
 def get_embedding(text):
-    return model.model.encode(
+    return _get_model().model.encode(
         text, show_progress_bar=False, convert_to_numpy=True
     ).astype(np.float32)
 
@@ -139,7 +146,7 @@ def data_generator_multiprocessing(
 def _flush_batch(items: List[dict]) -> List[dict]:
     """溜まったアイテムをまとめてベクトル化する"""
     texts = [item["text"] for item in items]
-    vectors = model.model.encode(
+    vectors = _get_model().model.encode(
         texts, show_progress_bar=False, convert_to_numpy=True
     ).astype(np.float32)
 
