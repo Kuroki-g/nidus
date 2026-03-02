@@ -39,7 +39,8 @@ def delete_files_in_db(
         logger.warning("No paths to delete.")
         return
 
-    paths_str = ", ".join([f"'{str(p)}'" for p in paths])
+    escaped = [str(p).replace("'", "''") for p in paths]
+    paths_str = ", ".join(f"'{e}'" for e in escaped)
     delete_query = f"source IN ({paths_str})"
 
     doc_meta_table.delete(delete_query)
