@@ -1,5 +1,4 @@
 import pytest
-
 from cli.processor.chunker import sentence_boundary_chunker
 
 pytestmark = pytest.mark.small

@@ -1,13 +1,10 @@
 import logging
 from datetime import date
-
-from cli.processor.file_processor import data_generator, CHUNK_STRATEGIES
 from pathlib import Path
-from typing import List
 
-from common.lance_db_manager import LanceDBManager
-
+from cli.processor.file_processor import CHUNK_STRATEGIES, data_generator
 from common.config import settings
+from common.lance_db_manager import LanceDBManager
 from common.os_utils import flatten_path_to_file
 
 logger = logging.getLogger(__name__)
@@ -28,12 +25,12 @@ def create_chunk_fts_index(table) -> None:
     )
 
 
-def _get_existing_meta(doc_meta_table, files: List[Path]) -> dict[str, dict]:
+def _get_existing_meta(doc_meta_table, files: list[Path]) -> dict[str, dict]:
     """Return {source: {created, file_hash}} for files already in doc_meta."""
     if not files:
         return {}
 
-    paths_str = ", ".join([f"'{str(p)}'" for p in files])
+    paths_str = ", ".join([f"'{p!s}'" for p in files])
     try:
         rows = (
             doc_meta_table.search()
@@ -49,14 +46,14 @@ def _get_existing_meta(doc_meta_table, files: List[Path]) -> dict[str, dict]:
 
 
 def update_files_in_db(
-    path_list: List[Path],
+    path_list: list[Path],
     db_path=settings.DB_PATH,
 ) -> None:
     """
     Re-index only files whose content has changed (hash-based incremental update).
     Unchanged files are skipped. The original `created` date is preserved on update.
     """
-    from cli.db.schemas import schema_names, get_file_hash
+    from cli.db.schemas import get_file_hash, schema_names
 
     db = LanceDBManager(db_path).db
     doc_meta_table = db.open_table(schema_names.doc_meta)
@@ -93,7 +90,7 @@ def update_files_in_db(
     changed_paths = [f for f, _, _ in changed]
 
     # Delete old records for changed files only
-    paths_str = ", ".join([f"'{str(p)}'" for p in changed_paths])
+    paths_str = ", ".join([f"'{p!s}'" for p in changed_paths])
     delete_query = f"source IN ({paths_str})"
     doc_meta_table.delete(delete_query)
     doc_chunk_table.delete(delete_query)

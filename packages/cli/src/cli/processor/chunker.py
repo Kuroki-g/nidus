@@ -47,11 +47,11 @@ def _find_split_point(text: str, start: int, end: int) -> int:
     """start〜end の範囲で最適な分割点を後ろから探す"""
     # 1. 句点・感嘆符・疑問符（最後の一致の直後）
     # pos/endpos を使って部分文字列コピーを避ける
-    last_match = None
-    for last_match in SENTENCE_ENDINGS_PATTERN.finditer(text, start, end):
+    _last_match = None
+    for _last_match in SENTENCE_ENDINGS_PATTERN.finditer(text, start, end):
         pass
-    if last_match is not None:
-        return last_match.end()
+    if _last_match is not None:
+        return _last_match.end()
 
     # 2. 段落境界 \n\n
     idx = text.rfind('\n\n', start, end)

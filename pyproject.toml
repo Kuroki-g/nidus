@@ -45,6 +45,25 @@ markers = [
     "large: external services and network allowed",
 ]
 
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "UP",  # pyupgrade
+    "B",   # flake8-bugbear
+    "RUF", # ruff-specific
+]
+ignore = [
+    "RUF001", # 日本語全角文字（文字列）を許容
+    "RUF002", # 日本語全角文字（docstring）を許容
+    "RUF003", # 日本語全角文字（コメント）を許容
+]
+
 [tool.setuptools.packages.find]
 include = ["packages*"]
 

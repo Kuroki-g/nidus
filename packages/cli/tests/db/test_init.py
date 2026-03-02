@@ -1,5 +1,4 @@
 import pytest
-
 from cli.db.init import create_db_schemas
 
 pytestmark = pytest.mark.medium

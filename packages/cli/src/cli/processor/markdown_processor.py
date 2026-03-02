@@ -1,5 +1,6 @@
-import mistune
 from pathlib import Path
+
+import mistune
 from cli.processor.chunker import sections_to_chunks
 
 

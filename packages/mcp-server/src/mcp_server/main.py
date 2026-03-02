@@ -1,7 +1,8 @@
 import logging
+
+from common.config import settings
 from common.logger_setup import setup_logging
 from mcp.server.fastmcp import FastMCP
-from common.config import settings
 
 
 def main():

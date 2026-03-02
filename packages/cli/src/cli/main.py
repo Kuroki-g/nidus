@@ -1,5 +1,6 @@
 import logging
 from pathlib import Path
+
 import click
 from common.logger_setup import setup_logging
 

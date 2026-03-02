@@ -1,10 +1,10 @@
 import logging
-from pathlib import Path
 import threading
-
-from common.config import settings
+from pathlib import Path
 
 import lancedb
+
+from common.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +19,7 @@ class LanceDBManager:
         if cls._instance is None:
             with cls._lock:
                 if cls._instance is None:
-                    cls._instance = super(LanceDBManager, cls).__new__(cls)
+                    cls._instance = super().__new__(cls)
                     cls._instance._db = lancedb.connect(db_uri)
                     cls._db_uri = db_uri
                     logger.info(f"Connected to LanceDB at: {db_uri}")

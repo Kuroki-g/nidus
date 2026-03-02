@@ -1,11 +1,10 @@
 import logging
 from pathlib import Path
-from typing import List, Union
-from cli.db.update_db import update_files_in_db
-from common.lance_db_manager import LanceDBManager
-from common.config import settings
-from lancedb import Table
 
+from cli.db.update_db import update_files_in_db
+from common.config import settings
+from common.lance_db_manager import LanceDBManager
+from lancedb import Table
 
 logger = logging.getLogger(__name__)
 
@@ -18,8 +17,8 @@ def init_model():
         EmbeddingModelManager()
     except Exception as _e:
         logger.warning("failed to load model. downloading from HuggingFace.")
-        from huggingface_hub import snapshot_download
         from common.model import DEFAULT_MODEL_ID
+        from huggingface_hub import snapshot_download
 
         try:
             snapshot_download(DEFAULT_MODEL_ID)
@@ -30,7 +29,7 @@ def init_model():
 
 
 def init_db(
-    path_list: List[Union[str, Path]],
+    path_list: list[str | Path],
 ):
     """
     Read documents from target directory.
@@ -49,9 +48,9 @@ def create_db_schemas(db_uri: str = settings.DB_PATH) -> tuple[Table, Table]:
     model = EmbeddingModelManager()
 
     from cli.db.schemas import (
-        schema_names,
-        get_doc_meta_schema,
         get_doc_chunk_schema,
+        get_doc_meta_schema,
+        schema_names,
     )
 
     doc_meta_table = db.create_table(

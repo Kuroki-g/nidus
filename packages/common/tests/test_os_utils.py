@@ -1,5 +1,4 @@
 import pytest
-
 from common.os_utils import flatten_path_to_file
 
 pytestmark = pytest.mark.medium

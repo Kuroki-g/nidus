@@ -1,5 +1,4 @@
 import pytest
-
 from cli.processor.markdown_processor import chunk_markdown
 
 pytestmark = pytest.mark.medium

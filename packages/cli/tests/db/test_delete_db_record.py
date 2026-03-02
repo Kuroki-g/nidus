@@ -3,7 +3,6 @@ from pathlib import Path
 
 import lancedb
 import pytest
-
 from cli.db.delete_db_record import delete_files_in_db
 from cli.db.schemas import get_doc_chunk_schema, get_doc_meta_schema, schema_names
 from common.lance_db_manager import LanceDBManager

@@ -1,11 +1,11 @@
+from collections.abc import Generator, Iterable
 from pathlib import Path
-from typing import Union, Iterable, Generator
 
 
 def flatten_path_to_file(
-    paths: Union[str, Path, Iterable[Union[str, Path]]],
-    exclude_patterns: Union[Union[str, Path], Iterable[Union[str, Path]]] = (),
-) -> Generator[Path, None, None]:
+    paths: str | Path | Iterable[str | Path],
+    exclude_patterns: str | Path | Iterable[str | Path] = (),
+) -> Generator[Path]:
     """Flatten path to file list."""
     if isinstance(paths, (str, Path)):
         paths = [paths]

@@ -1,17 +1,15 @@
 import logging
 from pathlib import Path
-from typing import List
-
-from common.format import format_mes
-from mcp.server import FastMCP
 
 from cli.db.search_db import search_docs_in_db
 from cli.db.update_db import update_files_in_db
+from common.format import format_mes
+from mcp.server import FastMCP
 
 logger = logging.getLogger(__name__)
 
 
-def update_docs(path_list: List[Path]) -> None:
+def update_docs(path_list: list[Path]) -> None:
     """
     Update documents using all files assigned path_list.
 
@@ -22,7 +20,7 @@ def update_docs(path_list: List[Path]) -> None:
         update_files_in_db(path_list)
     except Exception as e:
         logger.error(e)
-        return f"failed to update documents information: {str(e)}"
+        return f"failed to update documents information: {e!s}"
 
 
 def search_docs(keyword: str) -> str:
@@ -44,12 +42,13 @@ def search_docs(keyword: str) -> str:
             text_snippet = row.get("text", "").replace("\n", " ")[:300]
 
             output.append(
-                f"--- source: {source} [{search_method.name}] (score: {score:.4f}) ---\n{text_snippet}...\n"
+                f"--- source: {source} [{search_method.name}]"
+                f" (score: {score:.4f}) ---\n{text_snippet}...\n"
             )
 
         return "\n".join(output)
     except Exception as e:
-        return f"検索エラーが発生しました: {str(e)}"
+        return f"検索エラーが発生しました: {e!s}"
 
 
 def list_docs(keyword: str) -> str:
@@ -73,7 +72,7 @@ def list_docs(keyword: str) -> str:
 
 def db_show_meta() -> str:
     """show metadata for database file"""
-    from cli.meta.db_info import get_meta, Metadata
+    from cli.meta.db_info import Metadata, get_meta
 
     def get_meta_summary_str(meta: Metadata, max_fields: int = 10) -> str:
         """

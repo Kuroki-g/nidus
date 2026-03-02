@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+
 from mcp import ClientSession
 from mcp.client.streamable_http import streamable_http_client
 
@@ -13,5 +14,5 @@ async def mcp_connection(url: str):
     ):
         async with ClientSession(read_stream, write_stream) as session:
             await session.initialize()
-            setattr(session, "session_id", get_session_id())
+            session.session_id = get_session_id()
             yield session

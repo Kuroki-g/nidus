@@ -1,11 +1,11 @@
-from enum import Enum
 import logging
-from typing import List, Literal, TypedDict
+from enum import Enum
+from typing import Literal, TypedDict
 
-from common.lance_db_manager import LanceDBManager
-from common.config import settings
-from common.model import EmbeddingModelManager
 import numpy as np
+from common.config import settings
+from common.lance_db_manager import LanceDBManager
+from common.model import EmbeddingModelManager
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +51,7 @@ def _get_adjacent_text(table, source: str, chunk_id: int, window: int) -> str:
     return "\n".join(r["chunk_text"] for r in rows_sorted)
 
 
-def list_docs_in_db(keyword: str | None) -> List[DocListEntry]:
+def list_docs_in_db(keyword: str | None) -> list[DocListEntry]:
     from cli.db.schemas import schema_names
 
     db = LanceDBManager().db
@@ -67,7 +67,7 @@ def list_docs_in_db(keyword: str | None) -> List[DocListEntry]:
         return []
 
 
-def display_list_results_simple(results: List[DocListEntry]):
+def display_list_results_simple(results: list[DocListEntry]):
     header = f"{'Source':<60} | {'Name'}"
     print(header)
     print("-" * 80)
@@ -78,7 +78,7 @@ def display_list_results_simple(results: List[DocListEntry]):
         print(f"{source:<60} | {doc_name}")
 
 
-def search_docs_in_db(keyword: str) -> List[SearchResult]:
+def search_docs_in_db(keyword: str) -> list[SearchResult]:
     from cli.db.schemas import schema_names
 
     db = LanceDBManager().db
@@ -102,7 +102,8 @@ def search_docs_in_db(keyword: str) -> List[SearchResult]:
             )
         else:
             logger.debug(
-                f"FTS skipped: query '{keyword}' is shorter than {_FTS_MIN_QUERY_LENGTH} characters."
+                f"FTS skipped: query '{keyword}' is shorter than"
+                f" {_FTS_MIN_QUERY_LENGTH} characters."
             )
             fts_results = []
 
@@ -140,7 +141,7 @@ def search_docs_in_db(keyword: str) -> List[SearchResult]:
         # 4. Sort by RRF score and build results with adjacent context
         sorted_keys = sorted(scores.keys(), key=lambda k: scores[k], reverse=True)
 
-        unique_results: List[SearchResult] = []
+        unique_results: list[SearchResult] = []
         for source, chunk_id in sorted_keys[: settings.SEARCH_LIMIT]:
             text = _get_adjacent_text(table, source, chunk_id, adjacent_window)
             result: SearchResult = {
@@ -161,7 +162,7 @@ def search_docs_in_db(keyword: str) -> List[SearchResult]:
         return []
 
 
-def display_results_simple(results: List[SearchResult]):
+def display_results_simple(results: list[SearchResult]):
     header = f"{'Score':<8} | {'Method':<10} | {'Source':<15} | {'Text'}"
     print(header)
     print("-" * 80)

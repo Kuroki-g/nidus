@@ -1,7 +1,7 @@
 import logging
-from pathlib import Path
-from common.config import settings
 import threading
+from pathlib import Path
+
 from huggingface_hub import snapshot_download
 from model2vec import StaticModel
 
@@ -29,7 +29,7 @@ class EmbeddingModelManager:
         return cls._instance
 
     def _init_model(cls):
-        cls._instance = super(EmbeddingModelManager, cls).__new__(cls)
+        cls._instance = super().__new__(cls)
         _model_id = DEFAULT_MODEL_ID
 
         logger.debug("reading: local file model snapshot...")

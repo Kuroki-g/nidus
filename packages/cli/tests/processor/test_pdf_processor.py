@@ -1,6 +1,6 @@
-import pytest
 from pathlib import Path
 
+import pytest
 from cli.processor.pdf_processor import chunk_pdf
 
 pytestmark = pytest.mark.medium

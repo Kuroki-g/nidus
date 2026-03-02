@@ -1,18 +1,15 @@
 import logging
-
 from pathlib import Path
-from typing import List
-
-from common.lance_db_manager import LanceDBManager
 
 from common.config import settings
+from common.lance_db_manager import LanceDBManager
 from common.os_utils import flatten_path_to_file
 
 logger = logging.getLogger(__name__)
 
 
 def delete_files_in_db(
-    path_list: List[Path],
+    path_list: list[Path],
     db_path=settings.DB_PATH,
 ):
     """

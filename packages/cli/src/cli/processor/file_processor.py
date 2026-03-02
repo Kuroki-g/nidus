@@ -1,16 +1,16 @@
-from concurrent.futures import ProcessPoolExecutor
 import logging
 import multiprocessing
 import os
+from collections.abc import Callable, Iterable
+from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
-from typing import Callable, Iterable, List, Optional, Union
+
 import numpy as np
-from common.model import EmbeddingModelManager
 from cli.processor.html_processor import chunk_html
 from cli.processor.markdown_processor import chunk_markdown
 from cli.processor.pdf_processor import chunk_pdf
 from cli.processor.plain_text_processor import chunk_asciidoc, chunk_plain_text
-
+from common.model import EmbeddingModelManager
 
 _model: EmbeddingModelManager | None = None
 logger = logging.getLogger(__name__)
@@ -30,7 +30,7 @@ def get_embedding(text):
     ).astype(np.float32)
 
 
-CHUNK_STRATEGIES: dict[str, Callable[[Path], List[str]]] = {
+CHUNK_STRATEGIES: dict[str, Callable[[Path], list[str]]] = {
     ".md": lambda path: chunk_markdown(path),
     ".adoc": lambda path: chunk_asciidoc(path),
     ".txt": lambda path: chunk_plain_text(path),
@@ -40,7 +40,7 @@ CHUNK_STRATEGIES: dict[str, Callable[[Path], List[str]]] = {
 }
 
 
-def get_chunks(file_path: Path) -> Optional[List[str]]:
+def get_chunks(file_path: Path) -> list[str] | None:
     if not file_path.is_file():
         return None
 
@@ -58,8 +58,8 @@ def get_chunks(file_path: Path) -> Optional[List[str]]:
 
 
 def data_generator(
-    path_list: List[Union[str, Path]], batch_size: int = 64
-) -> Iterable[List[dict]]:
+    path_list: list[str | Path], batch_size: int = 64
+) -> Iterable[list[dict]]:
     """TODO: refactoring"""
     from common.os_utils import flatten_path_to_file
 
@@ -106,8 +106,8 @@ def data_generator(
 
 
 def data_generator_multiprocessing(
-    path_list: List[Union[str, Path]], batch_size: int = 64
-) -> Iterable[List[dict]]:
+    path_list: list[str | Path], batch_size: int = 64
+) -> Iterable[list[dict]]:
     """
     NOTE: 実装をしてみたはものの早くならないので未使用
     """
@@ -124,7 +124,7 @@ def data_generator_multiprocessing(
     ctx = multiprocessing.get_context("spawn")
 
     with ProcessPoolExecutor(max_workers=max_workers, mp_context=ctx) as executor:
-        for file_path, chunks in zip(all_files, executor.map(get_chunks, all_files)):
+        for file_path, chunks in zip(all_files, executor.map(get_chunks, all_files), strict=True):
             if not chunks:
                 continue
 
@@ -143,7 +143,7 @@ def data_generator_multiprocessing(
         yield _flush_batch(pending_items)
 
 
-def _flush_batch(items: List[dict]) -> List[dict]:
+def _flush_batch(items: list[dict]) -> list[dict]:
     """溜まったアイテムをまとめてベクトル化する"""
     texts = [item["text"] for item in items]
     vectors = _get_model().model.encode(
@@ -151,7 +151,7 @@ def _flush_batch(items: List[dict]) -> List[dict]:
     ).astype(np.float32)
 
     records = []
-    for item, vector in zip(items, vectors):
+    for item, vector in zip(items, vectors, strict=True):
         records.append(
             {
                 "vector": vector,

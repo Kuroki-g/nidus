@@ -1,9 +1,10 @@
 import logging
 import re
 from pathlib import Path
-from pypdf import PdfReader
-from pdfminer.high_level import extract_text
+
 from cli.processor.chunker import sentence_boundary_chunker
+from pdfminer.high_level import extract_text
+from pypdf import PdfReader
 
 logging.getLogger("pypdf").setLevel(logging.ERROR)
 logger = logging.getLogger(__name__)
@@ -63,7 +64,8 @@ def chunk_pdf(
     # フォント構成を事前確認し、pypdf で文字化けする場合は pdfminer に直行する
     if _needs_pdfminer(path):
         logger.debug(
-            f"{path.name}: Type0/Identity-H font without ToUnicode detected, using pdfminer directly."
+            f"{path.name}: Type0/Identity-H font without ToUnicode detected,"
+            " using pdfminer directly."
         )
         return chunk_pdf_by_pdfminer(path, chunk_size, overlap, min_chunk)
 

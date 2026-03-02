@@ -1,5 +1,4 @@
 import pytest
-
 from mcp_server.tools import search_docs
 
 pytestmark = pytest.mark.medium

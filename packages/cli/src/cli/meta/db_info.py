@@ -1,6 +1,7 @@
 import logging
 from pathlib import Path
-from typing import List, TypedDict
+from typing import TypedDict
+
 from common.config import settings
 from common.lance_db_manager import LanceDBManager
 
@@ -17,7 +18,7 @@ class TableInfo(TypedDict):
 class Metadata(TypedDict):
     database_path: Path
     total_tables: int
-    tables: List[TableInfo]
+    tables: list[TableInfo]
 
 
 def get_meta(

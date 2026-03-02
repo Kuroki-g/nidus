@@ -1,6 +1,7 @@
 import re
 from pathlib import Path
-from cli.processor.chunker import sentence_boundary_chunker, sections_to_chunks
+
+from cli.processor.chunker import sections_to_chunks, sentence_boundary_chunker
 
 ADOC_HEADING_PATTERN = re.compile(r'^(={1,6})\s+(.+)$', re.MULTILINE)
 
