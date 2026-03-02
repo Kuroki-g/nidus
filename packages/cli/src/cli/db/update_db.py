@@ -47,7 +47,7 @@ def _get_existing_meta(doc_meta_table, files: list[Path]) -> dict[str, dict]:
 
 def update_files_in_db(
     path_list: list[Path],
-    db_path=settings.DB_PATH,
+    db_path: str | Path = settings.DB_PATH,
 ) -> None:
     """
     Re-index only files whose content has changed (hash-based incremental update).

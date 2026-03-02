@@ -1,6 +1,6 @@
 import logging
 from enum import Enum
-from typing import Literal, TypedDict
+from typing import Literal, TypedDict, cast
 
 import numpy as np
 from common.config import settings
@@ -61,7 +61,7 @@ def list_docs_in_db(keyword: str | None) -> list[DocListEntry]:
         if keyword is not None:
             query = query.where(f"source LIKE '%{keyword}%'")
         results = query.limit(settings.SEARCH_LIMIT * 10).to_list()
-        return results
+        return cast(list[DocListEntry], results)
     except Exception as e:
         logger.critical(e)
         return []

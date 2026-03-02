@@ -9,7 +9,7 @@ from mcp.server import FastMCP
 logger = logging.getLogger(__name__)
 
 
-def update_docs(path_list: list[Path]) -> None:
+def update_docs(path_list: list[Path]) -> str | None:
     """
     Update documents using all files assigned path_list.
 

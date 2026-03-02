@@ -58,7 +58,7 @@ def get_chunks(file_path: Path) -> list[str] | None:
 
 
 def data_generator(
-    path_list: list[str | Path], batch_size: int = 64
+    path_list: list[Path], batch_size: int = 64
 ) -> Iterable[list[dict]]:
     """TODO: refactoring"""
     from common.os_utils import flatten_path_to_file
@@ -120,7 +120,8 @@ def data_generator_multiprocessing(
         )
 
     pending_items = []
-    max_workers = min(os.cpu_count(), len(all_files)) if all_files else 1
+    cpu_count = os.cpu_count() or 1
+    max_workers = min(cpu_count, len(all_files)) if all_files else 1
     ctx = multiprocessing.get_context("spawn")
 
     with ProcessPoolExecutor(max_workers=max_workers, mp_context=ctx) as executor:

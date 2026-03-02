@@ -50,7 +50,7 @@ def init(dir):
     init_model()
 
     dir = [] if dir is None else dir
-    targets = [str(Path(p).resolve()) for p in dir]
+    targets = [Path(p).resolve() for p in dir]
 
     init_db(targets)
 

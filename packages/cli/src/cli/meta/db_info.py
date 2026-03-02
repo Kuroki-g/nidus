@@ -2,6 +2,7 @@ import logging
 from pathlib import Path
 from typing import TypedDict
 
+import pyarrow as pa
 from common.config import settings
 from common.lance_db_manager import LanceDBManager
 
@@ -11,21 +12,21 @@ logger = logging.getLogger(__name__)
 class TableInfo(TypedDict):
     table_name: str
     record_count: int
-    schema: int
+    schema: pa.Schema
     version: int
 
 
 class Metadata(TypedDict):
-    database_path: Path
+    database_path: str
     total_tables: int
     tables: list[TableInfo]
 
 
 def get_meta(
-    db_path=settings.DB_PATH,
+    db_path: str | Path = settings.DB_PATH,
 ) -> Metadata:
     db_m = LanceDBManager(db_path)
-    table_names = db_m.db.table_names()
+    table_names = list(db_m.db.table_names())
 
     metadata: Metadata = {
         "database_path": db_m.db_uri,

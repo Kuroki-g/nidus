@@ -64,6 +64,12 @@ ignore = [
     "RUF003", # 日本語全角文字（コメント）を許容
 ]
 
+[tool.pyright]
+pythonVersion = "3.14"
+typeCheckingMode = "standard"
+venvPath = "."
+venv = ".venv"
+
 [tool.setuptools.packages.find]
 include = ["packages*"]
 

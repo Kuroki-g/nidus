@@ -14,5 +14,5 @@ async def mcp_connection(url: str):
     ):
         async with ClientSession(read_stream, write_stream) as session:
             await session.initialize()
-            session.session_id = get_session_id()
+            session.session_id = get_session_id()  # type: ignore[attr-defined]
             yield session

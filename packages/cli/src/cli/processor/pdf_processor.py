@@ -5,6 +5,7 @@ from pathlib import Path
 from cli.processor.chunker import sentence_boundary_chunker
 from pdfminer.high_level import extract_text
 from pypdf import PdfReader
+from pypdf.generic import DictionaryObject
 
 logging.getLogger("pypdf").setLevel(logging.ERROR)
 logger = logging.getLogger(__name__)
@@ -35,9 +36,14 @@ def _needs_pdfminer(path: Path) -> bool:
         for page in reader.pages:
             if "/Resources" not in page:
                 continue
-            fonts = page["/Resources"].get("/Font", {})
+            resources = page["/Resources"]
+            if not isinstance(resources, DictionaryObject):
+                continue
+            fonts = resources.get("/Font", {})
             for font_ref in fonts.values():
                 font = font_ref.get_object()
+                if not isinstance(font, DictionaryObject):
+                    continue
                 if (
                     font.get("/Subtype") == "/Type0"
                     and font.get("/Encoding") == "/Identity-H"

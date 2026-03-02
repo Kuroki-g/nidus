@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 def delete_files_in_db(
     path_list: list[Path],
-    db_path=settings.DB_PATH,
+    db_path: str | Path = settings.DB_PATH,
 ):
     """
     Delete assigned file records from all tables.

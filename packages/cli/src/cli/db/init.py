@@ -29,7 +29,7 @@ def init_model():
 
 
 def init_db(
-    path_list: list[str | Path],
+    path_list: list[Path],
 ):
     """
     Read documents from target directory.
@@ -40,7 +40,7 @@ def init_db(
     logger.info("Database initialized and FTS index created for doc_chunk table.")
 
 
-def create_db_schemas(db_uri: str = settings.DB_PATH) -> tuple[Table, Table]:
+def create_db_schemas(db_uri: str | Path = settings.DB_PATH) -> tuple[Table, Table]:
     from common.model import EmbeddingModelManager
 
     db = LanceDBManager(db_uri).db
