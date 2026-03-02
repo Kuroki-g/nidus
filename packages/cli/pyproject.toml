@@ -5,10 +5,17 @@ description = "Nidus CLI"
 requires-python = "==3.14.*"
 dependencies = [
     "common",
-    "mistune>=3.2.0",
-    "pypdf>=6.7.1",
-    "pdfminer-six>=20260107",
-    "click>=8.3.1",
+    "mistune",
+    "pypdf",
+    "pdfminer-six",
+    "click",
+    "watchdog",
+    "lancedb",
+    "pyarrow",
+    "numpy",
+    "pydantic-settings",
+    "huggingface-hub",
+    "mcp",
 ]
 
 [project.scripts]

@@ -106,6 +106,29 @@ def drop(file):
 
 @cli.command()
 @click.argument(
+    "dirs",
+    nargs=-1,
+    required=True,
+    type=click.Path(exists=True, file_okay=False, dir_okay=True),
+)
+@click.option("--no-recursive", is_flag=True, help="Do not watch subdirectories")
+def watch(dirs, no_recursive):
+    """Watch directories and auto-index on file changes.
+
+    nidus watch ./docs ./notes
+    """
+    dir_paths = [Path(d).resolve() for d in dirs]
+
+    from cli.watch import watch_directories
+
+    click.echo(f"Watching {len(dir_paths)} directory(ies). Press Ctrl+C to stop.")
+    for d in dir_paths:
+        click.echo(f"  {d}")
+    watch_directories(dir_paths, recursive=not no_recursive)
+
+
+@cli.command()
+@click.argument(
     "keyword",
     required=True,
     type=click.STRING,

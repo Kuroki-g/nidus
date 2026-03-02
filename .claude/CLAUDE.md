@@ -35,6 +35,14 @@ uv run pytest packages/cli/tests/processor/test_markdown_processor.py
 
 現在の優先事項: **Milestone 1（AI可読性の改善）** → 詳細は `ROADMAP.md` を参照。
 
+## 既知の不具合
+
+`docs/issues/` ディレクトリに不具合メモを管理している。GitHub Issues の代替。
+
+- ファイル名は `<対象機能>-<概要>.md` の形式
+- コードレビューや作業中に見つけたバグを記録し、修正時に削除する
+- 修正着手前に該当ファイルを読んで原因・影響範囲を把握すること
+
 ## 規約
 
 - `python` / `pip` は直接使わず、`uv run` / `uv add` / `uv remove` を使う
