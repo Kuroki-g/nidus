@@ -35,6 +35,7 @@ dev = [
     "pyright[nodejs]>=1.1.408",
     "pytest>=9.0.2",
     "pytest-asyncio>=1.3.0",
+    "pytest-cov>=7.0.0",
     "ruff>=0.15.2",
 ]
 
@@ -43,6 +44,20 @@ markers = [
     "small: no I/O, no network, single process",
     "medium: local file or LanceDB access allowed, no external network",
     "large: external services and network allowed",
+]
+
+[tool.coverage.run]
+branch = true
+source = ["packages/cli/src", "packages/common/src", "packages/mcp-server/src"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+    "@(abc\\.)?abstractmethod",
 ]
 
 [tool.ruff]

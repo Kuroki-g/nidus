@@ -25,6 +25,9 @@ uv run pytest                           # 全テスト
 # 単一テストファイルの実行
 uv run pytest packages/cli/tests/processor/test_markdown_processor.py
 
+# カバレッジ計測（small + medium、HTMLは .coverage_html/）
+make coverage
+
 # Docker イメージビルド
 ./build-container.sh
 ```
