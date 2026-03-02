@@ -18,7 +18,9 @@ nidus search "キーワード"
 nidus-mcp
 
 # テスト実行
-uv run pytest
+uv run pytest -m small                  # 高速フィードバック（毎コミット推奨）
+uv run pytest -m "small or medium"      # PR 前
+uv run pytest                           # 全テスト
 
 # 単一テストファイルの実行
 uv run pytest packages/cli/tests/processor/test_markdown_processor.py
@@ -46,6 +48,16 @@ uv run pytest packages/cli/tests/processor/test_markdown_processor.py
 ## 規約
 
 - `python` / `pip` は直接使わず、`uv run` / `uv add` / `uv remove` を使う
+
+## テスト規約（Google Test Size）
+
+テストには必ず以下のマーカーを付ける。「単体/結合/統合」という用語は使わない。
+
+| マーカー | 制約 | このプロジェクトでの例 |
+|----------|------|----------------------|
+| `@pytest.mark.small` | I/O なし、ネットワークなし、シングルプロセス | パーサー・チャンカーのロジックテスト |
+| `@pytest.mark.medium` | ローカルファイル・LanceDB 可、外部ネットワーク不可 | DB 読み書き、CLI コマンドテスト |
+| `@pytest.mark.large` | 外部サービス・ネットワーク可 | （現時点では未使用） |
 
 ## ネットワーク制限
 
