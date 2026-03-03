@@ -103,6 +103,7 @@
       "Bash(git remote remove*)",
       "Bash(git remote set-url*)",
       "Bash(uv cache clean*)",
+      "Bash(rm*)",
       "Bash(curl*)",
       "Bash(wget*)",
       "Bash(socat*)",
