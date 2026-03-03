@@ -20,7 +20,7 @@ def get_single_doc(path: str) -> str:
         results = list_docs_in_db(path)
 
         if not results:
-            return f"source match to {path}' was not found."
+            return f"source match to '{path}' was not found."
 
         output = []
         for row in results:
