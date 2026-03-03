@@ -31,9 +31,14 @@ dist/
 build/
 *.egg-info/
 
-# IDE設定
+# IDE・開発ツール設定
 .vscode/
 .idea/
+.devcontainer/
+
+# カバレッジレポート
+.coverage
+.coverage_html/
 
 # ログ・データ
 *.log

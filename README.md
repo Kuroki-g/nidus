@@ -129,11 +129,41 @@ HOST=127.0.0.1                     # MCP サーバーホスト
 
 ## Docker
 
-Docker イメージをビルドして使うことができます:
+埋め込みモデルをイメージに焼き込んだ Docker イメージをビルドして使うことができます。
+
+### ビルド
 
 ```bash
 ./build-container.sh
 ```
+
+### ドキュメントをインデックス
+
+```bash
+docker run --rm \
+  -v nidus-db:/app/.cache/nidus \
+  -v ./docs:/docs:ro \
+  nidus:latest add -f /docs
+```
+
+### 検索
+
+```bash
+docker run --rm \
+  -v nidus-db:/app/.cache/nidus \
+  nidus:latest search "キーワード"
+```
+
+### watch モード（常駐）
+
+```bash
+docker run -d --name nidus-watch \
+  -v nidus-db:/app/.cache/nidus \
+  -v ./docs:/docs:ro \
+  nidus:latest watch /docs
+```
+
+DB は named volume `nidus-db`（コンテナ内 `/app/.cache/nidus`）に永続化されます。ドキュメントのパスは `-v ./your-docs:/docs:ro` のように bind mount して渡してください。
 
 ## Notice
 
