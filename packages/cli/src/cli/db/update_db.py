@@ -56,6 +56,24 @@ def update_files_in_db(
     from cli.db.schemas import get_file_hash, schema_names
 
     db = LanceDBManager(db_path).db
+
+    existing = db.table_names()
+    if schema_names.doc_meta not in existing or schema_names.doc_chunk not in existing:
+        logger.info("Tables not found. Running first-time initialization.")
+        from common.model import EmbeddingModelManager
+
+        model = EmbeddingModelManager()
+        from cli.db.schemas import get_doc_chunk_schema, get_doc_meta_schema
+
+        if schema_names.doc_meta not in existing:
+            db.create_table(name=schema_names.doc_meta, schema=get_doc_meta_schema(), data=None)
+        if schema_names.doc_chunk not in existing:
+            db.create_table(
+                name=schema_names.doc_chunk,
+                schema=get_doc_chunk_schema(model.vector_size),
+                data=None,
+            )
+
     doc_meta_table = db.open_table(schema_names.doc_meta)
     doc_chunk_table = db.open_table(schema_names.doc_chunk)
 
