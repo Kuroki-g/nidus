@@ -5,7 +5,6 @@ FROM python:3.14-slim
 ARG USER=vscode
 ARG UID=1000
 ARG GID=1000
-ARG NODE_MAJOR=22
 
 RUN apt-get update \
   && apt-get install -y --no-install-recommends \
@@ -42,14 +41,13 @@ RUN curl -fsSL https://claude.ai/install.sh | bash
 
 WORKDIR /workspace
 
-ENV PIP_USER=1 \
-  PATH="/home/${USER}/.local/bin:$PATH" \
+ENV PATH="/home/${USER}/.local/bin:$PATH" \
   PYTHONUNBUFFERED=1 \
   PYTHONDONTWRITEBYTECODE=1 \
   TERM=xterm-256color \
   LANG=C.UTF-8
 
-RUN pip install --no-cache-dir uv && \
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh && \
   echo "alias clip='xclip -selection clipboard'" >> $HOME/.bashrc
 
 CMD ["bash"]

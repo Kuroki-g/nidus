@@ -38,7 +38,6 @@ services:
         USER: vscode
         UID: "1000"
         GID: "1000"
-        NODE_MAJOR: "22"
     container_name: claude-dev
     depends_on:
       http-proxy:
@@ -64,8 +63,6 @@ services:
 
     volumes:
       - ..:/workspace:cached
-      - ${HOME}/.claude:/home/vscode/.claude
-      - ${HOME}/.cache/uv:/home/vscode/.cache/uv
       - /etc/localtime:/etc/localtime:ro
 
     user: "1000:1000"

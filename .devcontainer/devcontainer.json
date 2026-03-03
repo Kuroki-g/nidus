@@ -5,6 +5,10 @@
   "workspaceFolder": "/workspace",
   "service": "claude-dev",
   "postCreateCommand": "uv sync",
+  "mounts": [
+    "source=${localEnv:HOME}/.claude,target=/home/vscode/.claude,type=bind,consistency=cached",
+    "source=${localEnv:HOME}/.cache/uv,target=/home/vscode/.cache/uv,type=bind,consistency=cached"
+  ],
   "forwardPorts": [],
   "portsAttributes": {
     "30000-50000": {
@@ -18,7 +22,6 @@
         "ms-vscode.makefile-tools",
         "esbenp.prettier-vscode",
         "streetsidesoftware.code-spell-checker",
-        "ms-python.isort",
         "ms-python.vscode-pylance",
         "ms-python.debugpy",
         "ms-python.vscode-python-envs",
