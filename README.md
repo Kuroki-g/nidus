@@ -5,6 +5,10 @@ Claude Code・Gemini CLI などの AI エージェントが Bash ツール経由
 
 Markdown・PDF・テキスト・AsciiDoc・HTML をチャンクに分割してインデックスし、FTS + ベクターのハイブリッド検索で結果を返します。
 
+> [!WARNING]
+> This project is published for personal use only. Breaking changes may occur at any release.
+> Issues and pull requests are not accepted.
+
 ## Features
 
 - **日本語向けチャンク分割**: 句点（。！？）→ 段落 → 改行の優先順で文境界を検出。見出しをチャンクのプレフィックスとして付与し、検索結果の文脈を保持
@@ -89,6 +93,7 @@ AI クライアントの設定に追記します（例: Claude Code `settings.js
 | `nidus list [KEYWORD]`   | インデックス済みファイル一覧（キーワードでパスを絞り込み） |
 | `nidus status`           | DB のメタ情報（テーブル・レコード数など）を表示 |
 | `nidus debug parse FILE` | ファイルのチャンク分割結果を確認 |
+| `nidus watch DIRS...`    | ディレクトリを監視し、ファイル変更時に自動インデックス |
 
 ## MCP Tools
 
