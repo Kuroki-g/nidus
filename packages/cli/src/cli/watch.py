@@ -44,6 +44,16 @@ class _NidusEventHandler(FileSystemEventHandler):
 
     def on_moved(self, event: DirMovedEvent | FileMovedEvent) -> None:
         if event.is_directory:
+            src = Path(_to_str(event.src_path))
+            dest = Path(_to_str(event.dest_path))
+            if not dest.is_dir():
+                return
+            dest_files = [f for f in dest.rglob("*") if f.is_file() and self._is_supported(str(f))]
+            if dest_files:
+                old_paths = [src / f.relative_to(dest) for f in dest_files]
+                logger.info(f"[watch] dir moved: {src} -> {dest} ({len(dest_files)} files)")
+                _delete(old_paths)
+                _add(dest_files)
             return
         if self._is_supported(event.src_path):
             logger.info(f"[watch] moved (delete old): {event.src_path}")

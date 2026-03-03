@@ -6,6 +6,8 @@ from cli.watch import _NidusEventHandler, _to_str
 
 pytestmark = pytest.mark.small
 
+MEDIUM = pytest.mark.medium
+
 SUPPORTED = frozenset({".md", ".txt", ".adoc", ".pdf", ".html", ".htm"})
 
 
@@ -149,9 +151,42 @@ class TestOnMoved:
         mock_delete.assert_called_once_with([Path("/old/doc.md")])
         mock_add.assert_not_called()
 
-    def test_ignores_directory_move(self):
+    def test_dir_move_nonexistent_dest_does_nothing(self):
         handler = _NidusEventHandler(SUPPORTED)
         event = _make_moved_event("/old/dir", "/new/dir", is_directory=True)
+        with patch("cli.watch._delete") as mock_delete, patch("cli.watch._add") as mock_add:
+            handler.on_moved(event)
+        mock_delete.assert_not_called()
+        mock_add.assert_not_called()
+
+
+@MEDIUM
+class TestOnMovedDirectory:
+    def test_dir_move_deletes_old_and_adds_new(self, tmp_path: Path):
+        src = tmp_path / "notes"
+        dest = tmp_path / "archive"
+        dest.mkdir()
+        (dest / "a.md").write_text("hello")
+        (dest / "b.txt").write_text("world")
+        (dest / "skip.xyz").write_text("ignored")
+
+        handler = _NidusEventHandler(SUPPORTED)
+        event = _make_moved_event(str(src), str(dest), is_directory=True)
+        with patch("cli.watch._delete") as mock_delete, patch("cli.watch._add") as mock_add:
+            handler.on_moved(event)
+
+        deleted = mock_delete.call_args[0][0]
+        added = mock_add.call_args[0][0]
+        assert set(deleted) == {src / "a.md", src / "b.txt"}
+        assert set(added) == {dest / "a.md", dest / "b.txt"}
+
+    def test_dir_move_empty_dest_does_nothing(self, tmp_path: Path):
+        src = tmp_path / "notes"
+        dest = tmp_path / "archive"
+        dest.mkdir()
+
+        handler = _NidusEventHandler(SUPPORTED)
+        event = _make_moved_event(str(src), str(dest), is_directory=True)
         with patch("cli.watch._delete") as mock_delete, patch("cli.watch._add") as mock_add:
             handler.on_moved(event)
         mock_delete.assert_not_called()
