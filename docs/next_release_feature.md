@@ -4,39 +4,10 @@
 
 ---
 
-## Milestone 1: AI可読性の改善
+## Docker サポート
 
-**ゴール**: 検索結果が AI にとって精度よく・適切な量で渡される状態
+**ゴール**: `docker run` で nidus をそのまま使える状態
 
-- **RRF（Reciprocal Rank Fusion）導入**: FTS とベクター検索の結果を RRF でスコアリング・統合し、ランキング精度を向上
-- **スキーマ正規化**: `doc_meta` + `doc_chunk` の 2 テーブル構成に統一
-- **Adjacent chunks**: ヒットチャンクの前後チャンクを結合してスニペットを生成。AI に十分な文脈を渡す（`SEARCH_ADJACENT_WINDOW` で調整可能）
-- **チャンク分割の改善**: `chunk_size=1000 / overlap=150 / min_chunk=200`。句点（。！？）→ 段落 → 改行の優先順で文境界を検出。見出しをチャンクのプレフィックスとして付与
-- **FTS 日本語対応（bigram）**: ngram（bigram）トークナイザーを導入し、日本語連続文字列のヒット精度を改善
-
----
-
-## Milestone 2: 対応ファイル形式の拡充
-
-**ゴール**: Markdown・PDF 以外の一般的なテキストファイルを扱える状態
-
-- **プレーンテキスト（`.txt`）対応**: 文境界チャンク化
-- **AsciiDoc（`.adoc`）対応**: 見出し単位でセクション分割 → 文境界チャンク化
-- **HTML（`.html` / `.htm`）対応**: 標準ライブラリ `html.parser` でテキスト抽出。`h1`〜`h6` をセクション境界として見出しプレフィックス付きチャンクを生成。`script` / `style` / `head` タグはスキップ
-
----
-
-## Milestone 3: 検索精度の向上
-
-**ゴール**: 日本語 RAG として実用的な精度を達成する
-
-- **FTS インデックス設定の統一**: `init` / `add` で FTS インデックス設定を統一。bigram 未満（1 文字以下）のクエリは FTS をスキップしてベクター検索のみで応答
-- **検索スコアのチューニング**: `SEARCH_RRF_K`（RRF の k パラメータ、デフォルト 60）と `SEARCH_ADJACENT_WINDOW`（前後ウィンドウ幅、デフォルト 1）を `.env` で調整可能に
-
----
-
-## Milestone 4: 運用・配布の改善（完了分）
-
-**ゴール**: セットアップが簡単で継続的に使いやすい状態
-
-- **CLI ログレベル改善**: デフォルト WARNING。`-v` / `--verbose` で INFO、`--debug` で DEBUG ログを表示。グローバルオプションとして全コマンドに適用
+- **Docker イメージ刷新**: multi-stage build（`ghcr.io/astral-sh/uv:python3.14-trixie-slim` → `python:3.14-slim-trixie`）。埋め込みモデルをビルド時に焼き込み、`ENTRYPOINT ["nidus"]` でコマンドをそのまま渡せる形式
+- **Docker 権限修正**: `appuser`（HOME=`/app`）で動作するため `XDG_CACHE_HOME=/app/.cache` を固定し、`/app/.cache/nidus` を事前作成して named volume の書き込み権限を保証
+- **`nidus add` の自動 DB 初期化**: テーブル未存在時に自動 `create_table`。`nidus init` を実行しなくても `add` がそのまま動作
