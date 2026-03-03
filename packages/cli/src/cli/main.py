@@ -134,16 +134,24 @@ def watch(dirs, no_recursive):
     required=True,
     type=click.STRING,
 )
-def search(keyword):
+@click.option("--json", "output_json", is_flag=True, help="Output results as JSON")
+def search(keyword, output_json):
     """Search database by keyword"""
     if not keyword or len(keyword) == 0:
         logger.warning("keyword is required.")
         return
 
-    from cli.db.search_db import display_results_simple, search_docs_in_db
+    from cli.db.search_db import (
+        display_results_json,
+        display_results_simple,
+        search_docs_in_db,
+    )
 
     results = search_docs_in_db(keyword)
-    display_results_simple(results)
+    if output_json:
+        display_results_json(results)
+    else:
+        display_results_simple(results)
 
 
 @cli.command()

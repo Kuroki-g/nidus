@@ -174,3 +174,19 @@ def display_results_simple(results: list[SearchResult]):
         text = res["text"].replace("\n", " ")[:50] + "..."
 
         print(f"{score:<8} | {method:<10} | {source:<15} | {text}")
+
+
+def display_results_json(results: list[SearchResult]):
+    import json
+
+    output = [
+        {
+            "score": res["score"],
+            "method": res["method"].name,
+            "source": res["source"],
+            "chunk_id": res["chunk_id"],
+            "text": res["text"],
+        }
+        for res in results
+    ]
+    print(json.dumps(output, ensure_ascii=False, indent=2))
