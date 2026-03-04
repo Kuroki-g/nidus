@@ -78,6 +78,16 @@ services:
     tty: true
     working_dir: /workspace
 
+  squid-log:
+    image: busybox:1.37-musl
+    restart: unless-stopped
+    command: ["tail", "-F", "/var/log/squid/access.log"]
+    volumes:
+      - squid-logs:/var/log/squid:ro
+    depends_on:
+      http-proxy:
+        condition: service_healthy
+
 networks:
   internal: # cannot access internet directly
     internal: true
