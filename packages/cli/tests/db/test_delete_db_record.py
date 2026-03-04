@@ -96,3 +96,33 @@ def test_delete_only_target_path(tmp_path):
 
     assert _count(db_path, schema_names.doc_meta) == 1
     assert _count(db_path, schema_names.doc_chunk) == 1
+
+
+def test_delete_empty_path_list(tmp_path):
+    """空リストを渡してもレコードは変化しない。"""
+    db_path = _setup_db(tmp_path)
+    source = "/home/user/notes.md"
+    _add(db_path, [_meta(source)], [_chunk(source)])
+
+    delete_files_in_db([], db_path=db_path)
+
+    assert _count(db_path, schema_names.doc_meta) == 1
+    assert _count(db_path, schema_names.doc_chunk) == 1
+
+
+def test_delete_directory_expands_files(tmp_path):
+    """ディレクトリを渡すとその中のファイルが展開されて削除される。"""
+    db_path = _setup_db(tmp_path)
+    docs_dir = tmp_path / "docs"
+    docs_dir.mkdir()
+    note = docs_dir / "note.md"
+    note.write_text("hello")
+    source = str(note.resolve())
+    _add(db_path, [_meta(source)], [_chunk(source)])
+
+    assert _count(db_path, schema_names.doc_meta) == 1
+
+    delete_files_in_db([docs_dir], db_path=db_path)
+
+    assert _count(db_path, schema_names.doc_meta) == 0
+    assert _count(db_path, schema_names.doc_chunk) == 0
