@@ -4,6 +4,22 @@
 
 ---
 
+## DOCX / CSV / TSV サポート
+
+**ゴール**: オフィスドキュメントと表形式データをインデックス対象に追加
+
+- **DOCX サポート**: `python-docx` でテキスト抽出し、文境界チャンク化。`packages/cli/src/cli/processor/docx_processor.py`
+- **CSV/TSV サポート**: ヘッダー行を各チャンクに付与した行単位チャンク化。`packages/cli/src/cli/processor/csv_processor.py`
+
+## reindex コマンド
+
+**ゴール**: 埋め込みモデル変更・スキーマ更新後に全ドキュメントを再構築できるコマンド
+
+- **`nidus reindex`**: DB に登録済みのファイルパス一覧を取得し、全レコードを削除してゼロから再インデックス
+- **`--dry-run`**: 実際の処理をせず、対象ファイル一覧のみ表示
+
+---
+
 ## Docker サポート
 
 **ゴール**: `docker run` で nidus をそのまま使える状態
