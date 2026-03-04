@@ -19,6 +19,7 @@ constraint-dependencies = [
     "model2vec>=0.7.0",
     "huggingface-hub>=1.4.1",
     "mcp>=1.26.0",
+    "mammoth>=1.11.0",
     "mistune>=3.2.0",
     "pypdf>=6.7.1",
     "pdfminer-six>=20260107",
