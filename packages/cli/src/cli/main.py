@@ -169,6 +169,19 @@ def list(keyword):
 
 
 @cli.command()
+@click.option("--dry-run", is_flag=True, help="Show files to be reindexed without processing")
+def reindex(dry_run):
+    """Re-index all registered documents from scratch.
+
+    Useful after changing the embedding model or DB schema.
+    All existing records are cleared and rebuilt.
+    """
+    from cli.db.reindex_db import reindex_all_in_db
+
+    reindex_all_in_db(dry_run=dry_run)
+
+
+@cli.command()
 def status():
     """show metadata for database file"""
     from cli.meta.db_info import display_meta_simple, get_meta
