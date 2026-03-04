@@ -46,6 +46,21 @@ def _extract_sections(ast) -> list[tuple[str, str]]:
     return sections
 
 
+def chunk_markdown_text(
+    content: str,
+    chunk_size: int = 1000,
+    overlap: int = 150,
+    min_chunk: int = 200,
+) -> list[str]:
+    if not content:
+        return []
+
+    parser = mistune.create_markdown(renderer=None)
+    ast = parser(content)
+    sections = _extract_sections(ast)
+    return sections_to_chunks(sections, chunk_size, overlap, min_chunk)
+
+
 def chunk_markdown(
     path: Path,
     chunk_size: int = 1000,
@@ -55,8 +70,4 @@ def chunk_markdown(
     content = path.read_text(encoding="utf-8").strip()
     if not content:
         return []
-
-    parser = mistune.create_markdown(renderer=None)
-    ast = parser(content)
-    sections = _extract_sections(ast)
-    return sections_to_chunks(sections, chunk_size, overlap, min_chunk)
+    return chunk_markdown_text(content, chunk_size, overlap, min_chunk)

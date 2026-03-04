@@ -6,6 +6,7 @@ from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
 import numpy as np
+from cli.processor.docx_processor import chunk_docx
 from cli.processor.html_processor import chunk_html
 from cli.processor.markdown_processor import chunk_markdown
 from cli.processor.pdf_processor import chunk_pdf
@@ -37,6 +38,7 @@ CHUNK_STRATEGIES: dict[str, Callable[[Path], list[str]]] = {
     ".pdf": lambda path: chunk_pdf(path),
     ".html": lambda path: chunk_html(path),
     ".htm": lambda path: chunk_html(path),
+    ".docx": lambda path: chunk_docx(path),
 }
 
 
