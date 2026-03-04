@@ -1,18 +1,5 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
-  "hooks": {
-    "PostToolUse": [
-      {
-        "matcher": "Edit|Write",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "if git diff --name-only HEAD | grep -qF '.py'; then make check; fi"
-          }
-        ]
-      }
-    ]
-  },
   "permissions": {
     "allow": [
       "Read",
@@ -32,12 +19,11 @@
       "Bash(uv pip show*)",
       "Bash(uv tree*)",
       "Bash(uv lock --check*)",
-      "Bash(uv remove*)",
-      "Bash(uv tool uninstall*)",
       "Bash(uv build*)",
       "Bash(uv run pytest*)",
       "Bash(uv run ruff*)",
       "Bash(make lint*)",
+      "Bash(make coverage*)",
       "Bash(make type*)",
       "Bash(make check*)",
       "Bash(make fmt*)",
@@ -46,15 +32,40 @@
       "Bash(tree*)",
       "Bash(lsof*)",
       "Bash(wc*)",
+      "Bash(which*)",
       "Edit",
       "Bash(nidus --help*)",
       "Bash(nidus init*)",
       "Bash(nidus search*)",
       "Bash(nidus list*)",
       "Bash(nidus status*)",
-      "Bash(nidus drop*)",
+      "Bash(nidus reindex*)",
       "Bash(nidus debug*)",
       "Bash(nidus help*)"
+    ],
+    "deny": [
+      "Bash(pip*)",
+      "Bash(pip3*)",
+      "Bash(python -m pip*)",
+      "Bash(git push*)",
+      "Bash(git checkout -b*)",
+      "Bash(git switch -c*)",
+      "Bash(git switch --create*)",
+      "Bash(git reset --hard*)",
+      "Bash(git clean*)",
+      "Bash(git branch -d*)",
+      "Bash(git branch -D*)",
+      "Bash(git remote add*)",
+      "Bash(git remote remove*)",
+      "Bash(git remote set-url*)",
+      "Bash(uv cache clean*)",
+      "Bash(rm*)",
+      "Bash(curl*)",
+      "Bash(wget*)",
+      "Bash(socat*)",
+      "WebSearch",
+      "NotebookEdit",
+      "mcp__ide__executeCode"
     ],
     "ask": [
       "Task",
@@ -81,35 +92,28 @@
       "Bash(uv pip install*)",
       "Bash(uv pip uninstall*)",
       "Bash(uv tool install*)",
+      "Bash(uv tool uninstall*)",
+      "Bash(uv remove*)",
       "Bash(unzip*)",
       "Bash(zip*)",
       "Bash(python*)",
       "Bash(python3*)",
-      "Bash(nidus add*)"
-    ],
-    "deny": [
-      "Bash(pip*)",
-      "Bash(pip3*)",
-      "Bash(python -m pip*)",
-      "Bash(git push*)",
-      "Bash(git checkout -b*)",
-      "Bash(git switch -c*)",
-      "Bash(git switch --create*)",
-      "Bash(git reset --hard*)",
-      "Bash(git clean*)",
-      "Bash(git branch -d*)",
-      "Bash(git branch -D*)",
-      "Bash(git remote add*)",
-      "Bash(git remote remove*)",
-      "Bash(git remote set-url*)",
-      "Bash(uv cache clean*)",
-      "Bash(rm*)",
-      "Bash(curl*)",
-      "Bash(wget*)",
-      "Bash(socat*)",
-      "WebSearch",
-      "NotebookEdit",
-      "mcp__ide__executeCode"
+      "Bash(nidus add*)",
+      "Bash(nidus update*)",
+      "Bash(nidus drop*)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if git diff --name-only HEAD | grep -qF '.py'; then make check; fi"
+          }
+        ]
+      }
     ]
   }
 }
