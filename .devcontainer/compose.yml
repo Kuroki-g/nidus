@@ -63,6 +63,8 @@ services:
 
     volumes:
       - ..:/workspace:cached
+      - ${HOME}/.claude:/home/vscode/.claude
+      - ${HOME}/.claude.json:/home/vscode/.claude.json
       - /etc/localtime:/etc/localtime:ro
 
     user: "1000:1000"

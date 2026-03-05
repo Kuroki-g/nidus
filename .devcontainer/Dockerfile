@@ -24,6 +24,16 @@ RUN apt-get update \
   unzip \
   xclip \
   zip \
+  # Rust
+  g++ \
+  gcc \
+  libc6-dev \
+  libonig-dev \
+  pkg-config \
+  libprotobuf-dev \
+  protobuf-compiler \
+  ripgrep \
+  xxd \
   && rm -rf /var/lib/apt/lists/*
 
 # --- Create non root user ---
@@ -34,20 +44,29 @@ RUN groupadd --gid ${GID} ${USER} \
   --shell /bin/bash \
   --create-home \
   ${USER}
+
 RUN mkdir -p /workspace && chown ${UID}:${GID} /workspace
 
 USER ${USER}
-RUN curl -fsSL https://claude.ai/install.sh | bash
-
-WORKDIR /workspace
 
 ENV PATH="/home/${USER}/.local/bin:$PATH" \
   PYTHONUNBUFFERED=1 \
   PYTHONDONTWRITEBYTECODE=1 \
   TERM=xterm-256color \
+  # Rust
+  RUSTUP_HOME="/home/${USER}/.rustup" \
+  CARGO_HOME="/home/${USER}/.cargo" \
+  PATH="/home/${USER}/.cargo/bin:${PATH}" \
   LANG=C.UTF-8
+
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
+  | sh -s -- -y --default-toolchain stable
 
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh && \
   echo "alias clip='xclip -selection clipboard'" >> $HOME/.bashrc
+
+RUN curl -fsSL https://claude.ai/install.sh | bash
+
+WORKDIR /workspace
 
 CMD ["bash"]
