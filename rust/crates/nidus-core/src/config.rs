@@ -3,6 +3,7 @@ use std::path::PathBuf;
 #[derive(Debug, Clone)]
 pub struct Config {
     pub db_path: PathBuf,
+    pub model_dir: PathBuf,
     pub table_name: String,
     pub search_limit: usize,
     pub search_rrf_k: usize,
@@ -16,9 +17,11 @@ impl Config {
 
         let cache_dir = cache_dir();
         let db_path = env_path("DB_PATH").unwrap_or_else(|| cache_dir.join(".lancedb"));
+        let model_dir = env_path("MODEL_DIR").unwrap_or_else(|| cache_dir.join("model"));
 
         Self {
             db_path,
+            model_dir,
             table_name: env_str("TABLE_NAME", "docs"),
             search_limit: env_usize("SEARCH_LIMIT", 5),
             search_rrf_k: env_usize("SEARCH_RRF_K", 60),
