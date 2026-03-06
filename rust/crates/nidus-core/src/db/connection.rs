@@ -127,7 +127,7 @@ mod tests {
 
         let conn = connect(&db_path).await;
         assert!(conn.is_ok(), "connect failed: {:?}", conn.err());
-        // 接続後にパスが存在することを確認
-        assert!(db_path.exists() || db_path.parent().unwrap().exists());
+        // 接続後に LanceDB がディレクトリを作成したことを確認
+        assert!(db_path.exists());
     }
 }

@@ -50,6 +50,13 @@ impl EmbeddingModel {
             .map(|b| f32::from_le_bytes([b[0], b[1], b[2], b[3]]))
             .collect();
 
+        anyhow::ensure!(
+            weights.len() == vocab_size * VECTOR_SIZE,
+            "weights size mismatch: expected {}, got {}",
+            vocab_size * VECTOR_SIZE,
+            weights.len()
+        );
+
         Ok(Self {
             tokenizer,
             weights,
