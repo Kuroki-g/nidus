@@ -1,0 +1,14 @@
+[package]
+name    = "nidus-cli"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "nidus"
+path = "src/main.rs"
+
+[dependencies]
+nidus-core = { path = "../nidus-core" }
+tokio      = { workspace = true }
+anyhow     = { workspace = true }
+clap       = { workspace = true }
