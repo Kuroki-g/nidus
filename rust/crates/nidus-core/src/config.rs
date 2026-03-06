@@ -4,7 +4,6 @@ use std::path::PathBuf;
 pub struct Config {
     pub db_path: PathBuf,
     pub model_dir: PathBuf,
-    pub table_name: String,
     pub search_limit: usize,
     pub search_rrf_k: usize,
     pub search_adjacent_window: usize,
@@ -22,7 +21,6 @@ impl Config {
         Self {
             db_path,
             model_dir,
-            table_name: env_str("TABLE_NAME", "docs"),
             search_limit: env_usize("SEARCH_LIMIT", 5),
             search_rrf_k: env_usize("SEARCH_RRF_K", 60),
             search_adjacent_window: env_usize("SEARCH_ADJACENT_WINDOW", 1),
@@ -40,10 +38,6 @@ fn cache_dir() -> PathBuf {
     dirs::cache_dir()
         .unwrap_or_else(|| PathBuf::from(".cache"))
         .join("nidus")
-}
-
-fn env_str(key: &str, default: &str) -> String {
-    std::env::var(key).unwrap_or_else(|_| default.to_string())
 }
 
 fn env_usize(key: &str, default: usize) -> usize {
