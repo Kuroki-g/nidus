@@ -9,6 +9,12 @@ check: lint type
 fmt:
 	uv run ruff format packages/ && uv run ruff check packages/ --fix
 
+fmt-rust:
+	cargo fmt --manifest-path rust/Cargo.toml --all
+
+clippy:
+	cargo clippy --manifest-path rust/Cargo.toml --all -- -D warnings
+
 coverage:
 	uv run pytest -m "small or medium" --cov=cli --cov=common --cov=mcp_server --cov-report=term-missing --cov-report=html:.coverage_html
 
