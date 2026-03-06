@@ -130,6 +130,15 @@
             "command": "if git diff --name-only HEAD | grep -qF '.py'; then make check; fi"
           }
         ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/hook-rust.sh"
+          }
+        ]
       }
     ]
   }
