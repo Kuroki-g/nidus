@@ -367,11 +367,20 @@ pub async fn update_files_in_db(
 
     // doc_meta 一括書き込み（チャンク生成成功分のみ）
     {
-        let sources: Vec<String> = entries_with_chunks.iter().map(|(e, _)| e.source.clone()).collect();
-        let doc_names: Vec<String> = entries_with_chunks.iter().map(|(e, _)| e.doc_name.clone()).collect();
+        let sources: Vec<String> = entries_with_chunks
+            .iter()
+            .map(|(e, _)| e.source.clone())
+            .collect();
+        let doc_names: Vec<String> = entries_with_chunks
+            .iter()
+            .map(|(e, _)| e.doc_name.clone())
+            .collect();
         let created: Vec<i32> = entries_with_chunks.iter().map(|(e, _)| e.created).collect();
         let updated: Vec<i32> = entries_with_chunks.iter().map(|(e, _)| e.updated).collect();
-        let hashes: Vec<String> = entries_with_chunks.iter().map(|(e, _)| e.hash.clone()).collect();
+        let hashes: Vec<String> = entries_with_chunks
+            .iter()
+            .map(|(e, _)| e.hash.clone())
+            .collect();
 
         let schema = doc_meta_schema();
         let batch = RecordBatch::try_new(
