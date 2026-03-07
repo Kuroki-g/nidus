@@ -10,6 +10,7 @@ use nidus_core::{
     },
     embedding::EmbeddingModel,
     init::download_model,
+    watch::watch_directories,
 };
 
 #[derive(Parser)]
@@ -68,9 +69,11 @@ enum Commands {
     ///
     /// nidus status
     Status,
-    /// Watch directories and auto-index on file changes. [NOT IMPLEMENTED]
+    /// Watch directories and auto-index on file changes.
+    ///
+    /// nidus watch -f ./docs -f ./notes
     Watch {
-        /// Directory to watch
+        /// Directory (or file) to watch
         #[arg(short = 'f', long = "file", required = true, value_name = "PATH")]
         dirs: Vec<PathBuf>,
     },
@@ -88,7 +91,7 @@ async fn main() -> Result<()> {
         Commands::List { keyword } => cmd_list(keyword).await?,
         Commands::Reindex { dry_run } => cmd_reindex(dry_run).await?,
         Commands::Status => cmd_status().await?,
-        Commands::Watch { .. } => anyhow::bail!("watch: not implemented yet"),
+        Commands::Watch { dirs } => cmd_watch(dirs).await?,
     }
 
     Ok(())
@@ -213,6 +216,14 @@ async fn cmd_search(query: String, output_json: bool) -> Result<()> {
         display_simple(&results);
     }
 
+    Ok(())
+}
+
+async fn cmd_watch(dirs: Vec<PathBuf>) -> Result<()> {
+    let config = Config::load();
+    let db = db::connect(&config.db_path).await?;
+    let model = EmbeddingModel::load(&config.model_dir)?;
+    watch_directories(&dirs, &db, &model).await?;
     Ok(())
 }
 
