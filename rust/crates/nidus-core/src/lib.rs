@@ -3,6 +3,7 @@ pub mod db;
 pub mod embedding;
 pub mod init;
 pub mod processor;
+pub mod watch;
 
 pub use config::Config;
 pub use db::{
