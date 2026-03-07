@@ -38,10 +38,20 @@ pub async fn db_status(db: &Connection, db_path: &str) -> Result<DbStatus> {
             .await
             .with_context(|| format!("failed to count rows in {name}"))?;
 
-        let schema = table.schema().await.with_context(|| format!("failed to get schema for {name}"))?;
-        let fields: Vec<String> = schema.fields().iter().map(|f| f.name().to_string()).collect();
+        let schema = table
+            .schema()
+            .await
+            .with_context(|| format!("failed to get schema for {name}"))?;
+        let fields: Vec<String> = schema
+            .fields()
+            .iter()
+            .map(|f| f.name().to_string())
+            .collect();
 
-        let version = table.version().await.with_context(|| format!("failed to get version for {name}"))?;
+        let version = table
+            .version()
+            .await
+            .with_context(|| format!("failed to get version for {name}"))?;
 
         tables.push(TableInfo {
             name: name.clone(),
