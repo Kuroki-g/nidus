@@ -4,5 +4,7 @@ pub mod embedding;
 pub mod processor;
 
 pub use config::Config;
-pub use db::{connect, doc_chunk_schema, doc_meta_schema};
+pub use db::{
+    collect_files, connect, doc_chunk_schema, doc_meta_schema, file_hash, update_files_in_db,
+};
 pub use embedding::{EmbeddingModel, VECTOR_SIZE};
