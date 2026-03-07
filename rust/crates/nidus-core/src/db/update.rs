@@ -21,10 +21,27 @@ use crate::processor::get_chunks;
 const BATCH_SIZE: usize = 64;
 
 /// ファイルの SHA-256 ハッシュを計算して16進文字列で返す。
+///
+/// 大きなファイルでもメモリ消費を抑えるためストリーミングで読み込む。
 pub fn file_hash(path: &Path) -> Result<String> {
     use sha2::{Digest, Sha256};
-    let bytes = std::fs::read(path).with_context(|| format!("cannot read {}", path.display()))?;
-    Ok(format!("{:x}", Sha256::digest(&bytes)))
+    use std::io::{BufReader, Read};
+
+    let file =
+        std::fs::File::open(path).with_context(|| format!("cannot read {}", path.display()))?;
+    let mut reader = BufReader::new(file);
+    let mut hasher = Sha256::new();
+    let mut buf = [0u8; 8192];
+    loop {
+        let n = reader
+            .read(&mut buf)
+            .with_context(|| format!("read error for {}", path.display()))?;
+        if n == 0 {
+            break;
+        }
+        hasher.update(&buf[..n]);
+    }
+    Ok(format!("{:x}", hasher.finalize()))
 }
 
 /// 現在の日付を Date32 値（Unix epoch からの日数）として返す。
@@ -209,7 +226,12 @@ pub async fn update_files_in_db(
             .collect();
         let hashes: Vec<String> = files
             .iter()
-            .map(|p| file_hash(p).unwrap_or_default())
+            .map(|p| {
+                file_hash(p).unwrap_or_else(|e| {
+                    eprintln!("WARN: hash failed for {}: {e}", p.display());
+                    String::new()
+                })
+            })
             .collect();
 
         let schema = doc_meta_schema();
@@ -362,5 +384,61 @@ mod tests {
         // 2回目: 既存テーブルをオープン
         let t2 = open_or_create(&db, "test_meta", schema).await;
         assert!(t2.is_ok(), "open failed: {:?}", t2.err());
+    }
+
+    #[tokio::test]
+    async fn flush_chunks_empty_buffer_is_noop() {
+        let tmp = tempfile::tempdir().unwrap();
+        let db = crate::db::connect(&tmp.path().join(".lancedb"))
+            .await
+            .unwrap();
+        let table = open_or_create(&db, "doc_chunk", doc_chunk_schema())
+            .await
+            .unwrap();
+
+        let mut buffer: Vec<(String, String, Vec<f32>, i64, String)> = vec![];
+        let result = flush_chunks(&mut buffer, &table, doc_chunk_schema()).await;
+
+        assert!(result.is_ok());
+        // バッファが空のまま（書き込みが発生していない）
+        assert!(buffer.is_empty());
+        assert_eq!(table.count_rows(None).await.unwrap(), 0);
+    }
+
+    #[tokio::test]
+    async fn flush_chunks_writes_records_and_clears_buffer() {
+        let tmp = tempfile::tempdir().unwrap();
+        let db = crate::db::connect(&tmp.path().join(".lancedb"))
+            .await
+            .unwrap();
+        let table = open_or_create(&db, "doc_chunk", doc_chunk_schema())
+            .await
+            .unwrap();
+
+        let vector = vec![0.0f32; VECTOR_SIZE];
+        let mut buffer = vec![
+            (
+                "path/a.md".to_string(),
+                "a.md".to_string(),
+                vector.clone(),
+                0i64,
+                "first chunk".to_string(),
+            ),
+            (
+                "path/a.md".to_string(),
+                "a.md".to_string(),
+                vector.clone(),
+                1i64,
+                "second chunk".to_string(),
+            ),
+        ];
+
+        let result = flush_chunks(&mut buffer, &table, doc_chunk_schema()).await;
+
+        assert!(result.is_ok());
+        // flush 後にバッファがクリアされている
+        assert!(buffer.is_empty());
+        // テーブルに2件書き込まれている
+        assert_eq!(table.count_rows(None).await.unwrap(), 2);
     }
 }
