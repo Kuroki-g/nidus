@@ -2,18 +2,25 @@
   "$schema": "https://raw.githubusercontent.com/devcontainers/spec/refs/heads/main/schemas/devContainer.schema.json",
   "name": "Claude Code CLI custom dev env",
   "dockerComposeFile": "./compose.yml",
-  "workspaceFolder": "/workspace",
+  "workspaceFolder": "/workspace/${localWorkspaceFolderBasename}",
   "service": "claude-dev",
-  "postCreateCommand": "uv sync",
+  "postCreateCommand": "uv sync && cd rust && cargo build",
   "mounts": [
-    "source=${localEnv:HOME}/.claude,target=/home/vscode/.claude,type=bind,consistency=cached",
-    "source=${localEnv:HOME}/.cache/uv,target=/home/vscode/.cache/uv,type=bind,consistency=cached"
+    "source=${localWorkspaceFolder},target=/workspace/${localWorkspaceFolderBasename},type=bind,consistency=cached",
+    "source=${localEnv:HOME}/.claude,target=/home/vscode/.claude,type=bind",
+    "source=${localEnv:HOME}/.claude.json,target=/home/vscode/.claude.json,type=bind",
+    "source=${localEnv:HOME}/.cache/uv,target=/home/vscode/.cache/uv,type=bind",
+    "source=${localEnv:HOME}/.cargo/registry,target=/home/vscode/.cargo/registry,type=bind",
+    "source=${localEnv:HOME}/.cargo/git,target=/home/vscode/.cargo/git,type=bind"
   ],
   "forwardPorts": [],
   "portsAttributes": {
     "30000-50000": {
       "onAutoForward": "silent"
     }
+  },
+  "remoteEnv": {
+    "PROJECT_NAME": "${localWorkspaceFolderBasename}"
   },
   "customizations": {
     "vscode": {

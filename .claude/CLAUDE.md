@@ -5,32 +5,22 @@
 ## コマンド
 
 ```bash
-# セットアップ
-uv sync
+# Rust ビルド
+make build           # デバッグビルド
+make release         # リリースビルド（rust/target/release/nidus）
+make test-rust       # Rust テスト
+make cross-linux     # Linux musl 静的バイナリ（cargo install cross が必要）
 
-# CLI 実行
-nidus --help
+# CLI 実行（Rust 版）
 nidus init
-nidus update -f file.txt -f dir/
+nidus add -f file.txt -f dir/
 nidus search "キーワード"
-
-# MCP サーバー起動 (localhost:8000)
-nidus-mcp
-
-# テスト実行
-uv run pytest -m small                  # 高速フィードバック（毎コミット推奨）
-uv run pytest -m "small or medium"      # PR 前
-uv run pytest                           # 全テスト
-
-# 単一テストファイルの実行
-uv run pytest packages/cli/tests/processor/test_markdown_processor.py
-
-# カバレッジ計測（small + medium、HTMLは .coverage_html/）
-make coverage
 
 # Docker イメージビルド
 ./build-container.sh
 ```
+
+Python 版のコマンド（uv・pytest・MCP サーバー）は `docs/python-architecture.md` を参照。
 
 ## 開発方針
 
@@ -48,19 +38,19 @@ make coverage
 - コードレビューや作業中に見つけたバグを記録し、修正時に削除する
 - 修正着手前に該当ファイルを読んで原因・影響範囲を把握すること
 
-## 規約
-
-- `python` / `pip` は直接使わず、`uv run` / `uv add` / `uv remove` を使う
-
 ## テスト規約（Google Test Size）
 
-テストには必ず以下のマーカーを付ける。「単体/結合/統合」という用語は使わない。
+「単体/結合/統合」という用語は使わない。small / medium / large の 3 段階で分類する。
 
-| マーカー | 制約 | このプロジェクトでの例 |
-|----------|------|----------------------|
-| `@pytest.mark.small` | I/O なし、ネットワークなし、シングルプロセス | パーサー・チャンカーのロジックテスト |
-| `@pytest.mark.medium` | ローカルファイル・LanceDB 可、外部ネットワーク不可 | DB 読み書き、CLI コマンドテスト |
-| `@pytest.mark.large` | 外部サービス・ネットワーク可 | （現時点では未使用） |
+| サイズ | 制約 |
+|--------|------|
+| small  | I/O なし、ネットワークなし、シングルプロセス |
+| medium | ローカルファイル・DB 可、外部ネットワーク不可 |
+| large  | 外部サービス・ネットワーク可（現時点では未使用） |
+
+**Python**: `@pytest.mark.small` / `@pytest.mark.medium` を付ける → 詳細は `docs/python-architecture.md`
+
+**Rust**: ソースファイル内 `#[test]` = small 相当、`tests/` ディレクトリ = medium 相当
 
 ## ネットワーク制限
 
@@ -71,7 +61,7 @@ devcontainer 内は squid プロキシ（`http://http-proxy:3128`）経由のみ
 - `.github.com` / `.githubusercontent.com` — コード参照
 - `.pypi.org` / `.pythonhosted.org` — Python パッケージ
 - `.huggingface.co` — ML モデル
-- `docs.rs` — Rust クレートドキュメント
+- `docs.rs` / `doc.rust-lang.org` — Rust ドキュメント
 - `docs.python.org` — Python 標準ライブラリ
 - `docs.astral.sh` — uv / ruff ドキュメント
 - `docs.pydantic.dev` — Pydantic ドキュメント
@@ -80,24 +70,4 @@ devcontainer 内は squid プロキシ（`http://http-proxy:3128`）経由のみ
 
 ## アーキテクチャ
 
-`uv` ワークスペースのモノレポで、`packages/` 配下に 3 つのパッケージがある。
-
-- **`packages/common`** — 共有シングルトンと設定。`EmbeddingModelManager`（日本語 sentence-transformer モデルをロード、シングルトン）、`LanceDBManager`（スレッドセーフな LanceDB 接続、シングルトン）、`Settings`（pydantic-settings、`.env` を読み込み）。CLI と MCP サーバーの両方からインポートされる。
-- **`packages/cli`** — Click ベースの CLI。`processor/` 配下のファイルプロセッサが markdown（mistune AST）と PDF（pypdf + pdfminer フォールバック）をチャンクに分割し、エンベディングを生成して LanceDB に書き込む。検索は FTS + ベクター検索のハイブリッドで結果をマージする。DB コマンドは `db/` 配下にある。
-- **`packages/mcp-server`** — HTTP トランスポート上の FastMCP サーバー。`tools.py` が CLI のデータベース操作を MCP ツール（`search_docs`、`update_docs`、`list_docs`、`db_show_meta`）としてラップする。`resources.py` は `docs://{name}` URI エンドポイントを公開。`prompts.py` はカスタムインストラクションを提供。
-
-### データフロー
-
-```text
-ファイル → processor/（チャンク化 + エンベディング）→ LanceDB (~/.cache/nidus/.lancedb)
-                                                              ↑
-MCP クライアント / CLI ← tools.py ← search_db.py（FTS + ベクター ハイブリッド）
-```
-
-### 主要な詳細
-
-- **エンベディングモデル**: `hotchpotch/static-embedding-japanese`、1024 次元ベクター。`nidus init` でダウンロード後はオフライン動作（`TRANSFORMERS_OFFLINE=1`）。
-- **LanceDB スキーマ** (`packages/cli/src/cli/db/schemas.py`): `vector`（float32 × 1024）、`text`、`source`（ファイルパス）、`chunk_id`。`text` フィールドに FTS インデックスあり。
-- **ハイブリッド検索**: FTS 結果とベクター結果をマージし、FTS マッチを優先して `(source, chunk_id)` で重複排除。
-- **設定** (`packages/common/src/common/config.py`): `DB_PATH`、`TABLE_NAME`、`PORT`（8000）、`HOST`（127.0.0.1）、`SEARCH_LIMIT`（5）は `.env` で上書き可能。
-- **Python バージョン**: 3.14 固定（`.python-version` 参照）。
+Python 実装（`packages/`）の詳細は `docs/python-architecture.md` を参照。
