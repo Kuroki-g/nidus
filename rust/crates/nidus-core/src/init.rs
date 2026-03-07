@@ -55,7 +55,9 @@ async fn download_file(url: &str, dest: &Path) -> Result<()> {
     let mut stream = response.bytes_stream();
 
     // 途中でエラーになっても壊れたファイルが残らないよう .tmp に書いてからリネーム
-    let tmp_path = dest.with_extension("tmp");
+    let mut tmp_name = dest.file_name().unwrap().to_os_string();
+    tmp_name.push(".tmp");
+    let tmp_path = dest.with_file_name(tmp_name);
     let mut file = std::fs::File::create(&tmp_path)
         .with_context(|| format!("cannot create {}", tmp_path.display()))?;
 
