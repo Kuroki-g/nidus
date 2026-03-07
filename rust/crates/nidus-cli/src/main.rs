@@ -6,6 +6,7 @@ use nidus_core::{
     config::Config,
     db::{self, search::search_docs, update::update_files_in_db, SearchResult},
     embedding::EmbeddingModel,
+    init::download_model,
 };
 
 #[derive(Parser)]
@@ -17,6 +18,10 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
+    /// Download the embedding model from HuggingFace.
+    ///
+    /// nidus init
+    Init,
     /// Add or update documents in the database.
     ///
     /// nidus add -f update-target.txt -f add-target-dir/
@@ -42,10 +47,18 @@ async fn main() -> Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
+        Commands::Init => cmd_init().await?,
         Commands::Add { files } => cmd_add(files).await?,
         Commands::Search { query, json } => cmd_search(query, json).await?,
     }
 
+    Ok(())
+}
+
+async fn cmd_init() -> Result<()> {
+    let config = Config::load();
+    download_model(&config.model_dir).await?;
+    println!("Model ready at {}", config.model_dir.display());
     Ok(())
 }
 
