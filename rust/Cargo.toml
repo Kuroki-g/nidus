@@ -31,3 +31,12 @@ ego-tree     = "0.9"
 sha2         = "0.10"
 futures      = "0.3"
 reqwest      = { version = "0.12", default-features = false, features = ["rustls-tls", "stream"] }
+
+[profile.dev]
+debug = 1          # フルデバッグ情報(2)→行番号のみ。リンク時間を大幅短縮
+
+# 依存クレートは opt-level=2 でビルドしキャッシュする。
+# tokenizers / lancedb / arrow 等の重いクレートの再コンパイルを防ぐ。
+[profile.dev.package."*"]
+opt-level = 2
+debug = false
