@@ -26,8 +26,8 @@ make cross-linux
 ### アーカイブ作成
 
 ```bash
-tar czf nidus-<version>-x86_64-unknown-linux-musl.tar.gz \
-    -C rust/target/x86_64-unknown-linux-musl/release nidus
+make package-linux
+# 成果物: nidus-v<version>-x86_64-unknown-linux-musl.tar.gz
 ```
 
 ---
@@ -72,7 +72,7 @@ git push origin vx.y.z
 
 ```bash
 # Linux / macOS
-tar xzf nidus-<version>-<target>.tar.gz
+tar xzf nidus-v<version>-<target>.tar.gz
 mv nidus ~/.local/bin/   # PATH が通っている場所に置く
 
 # 初回セットアップ（モデルのダウンロード）
