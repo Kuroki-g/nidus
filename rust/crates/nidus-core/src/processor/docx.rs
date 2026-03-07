@@ -111,12 +111,20 @@ fn parse_docx_xml(xml: &str) -> Result<String> {
 
 /// DOCX スタイル名から Markdown 見出しレベル（1〜6）に変換する。
 ///
-/// 英語名 "Heading1"〜"Heading6" のみ対応。未知のスタイルは None を返す。
+/// 対応するスタイル名:
+/// - 英語: "Heading1"〜"Heading6"（大文字小文字不問、数字との間のスペース任意）
+/// - 日本語: "見出し 1"〜"見出し 6"（スペース任意）
+///
+/// 未知のスタイルは None を返す。
 fn style_to_heading_level(style: Option<&str>) -> Option<usize> {
     let style = style?;
     let lower = style.to_lowercase();
-    let rest = lower.strip_prefix("heading")?;
-    let n: usize = rest.trim().parse().ok()?;
+
+    let rest = lower
+        .strip_prefix("heading")
+        .or_else(|| style.strip_prefix("見出し"));
+
+    let n: usize = rest?.trim().parse().ok()?;
     if (1..=6).contains(&n) {
         Some(n)
     } else {
@@ -130,10 +138,37 @@ mod tests {
 
     #[test]
     fn test_style_to_heading_level() {
+        // 英語スタイル
         assert_eq!(style_to_heading_level(Some("Heading1")), Some(1));
         assert_eq!(style_to_heading_level(Some("Heading6")), Some(6));
+        assert_eq!(style_to_heading_level(Some("heading 2")), Some(2));
+        // 日本語スタイル
+        assert_eq!(style_to_heading_level(Some("見出し 1")), Some(1));
+        assert_eq!(style_to_heading_level(Some("見出し 3")), Some(3));
+        assert_eq!(style_to_heading_level(Some("見出し6")), Some(6));
+        // 非見出し
         assert_eq!(style_to_heading_level(Some("Normal")), None);
+        assert_eq!(style_to_heading_level(Some("標準")), None);
         assert_eq!(style_to_heading_level(None), None);
+    }
+
+    #[test]
+    fn test_parse_docx_xml_japanese_heading() {
+        let xml = r#"<?xml version="1.0" encoding="UTF-8"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+<w:body>
+  <w:p>
+    <w:pPr><w:pStyle w:val="見出し 1"/></w:pPr>
+    <w:r><w:t>はじめに</w:t></w:r>
+  </w:p>
+  <w:p>
+    <w:r><w:t>本文テキスト。</w:t></w:r>
+  </w:p>
+</w:body>
+</w:document>"#;
+        let result = parse_docx_xml(xml).unwrap();
+        assert!(result.contains("# はじめに"));
+        assert!(result.contains("本文テキスト。"));
     }
 
     #[test]
