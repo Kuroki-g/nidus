@@ -30,3 +30,4 @@ pdf-extract  = "0.7"
 ego-tree     = "0.9"
 sha2         = "0.10"
 futures      = "0.3"
+reqwest      = { version = "0.12", default-features = false, features = ["rustls-tls", "stream"] }
