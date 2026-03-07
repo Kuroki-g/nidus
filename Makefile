@@ -1,3 +1,21 @@
+CARGO := cargo --manifest-path rust/Cargo.toml
+CROSS := cross --manifest-path rust/Cargo.toml
+
+## Rust
+build:
+	$(CARGO) build --all
+
+release:
+	$(CARGO) build --release --all
+
+test-rust:
+	$(CARGO) test --all
+
+# クロスコンパイル（cross が必要: cargo install cross）
+cross-linux:
+	$(CROSS) build --release --target x86_64-unknown-linux-musl
+
+## Python
 lint:
 	uv run ruff check packages/
 
