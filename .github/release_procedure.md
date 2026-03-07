@@ -9,43 +9,25 @@
 ### ローカルビルド（動作確認用）
 
 ```bash
-cd rust/
-cargo build --release
+make release
 # 成果物: rust/target/release/nidus
 ```
 
 ### クロスコンパイル（配布用）
 
-`cross` を使うと Docker 経由でクロスビルドできる。
+`cross` を使うと Docker 経由でクロスビルドできる。事前に `cargo install cross` が必要。
 
 ```bash
-cargo install cross
-
 # Linux x86_64 (musl: 依存なし・配布推奨)
-cross build --release --target x86_64-unknown-linux-musl
-
-# macOS Apple Silicon
-cross build --release --target aarch64-apple-darwin
-
-# macOS Intel
-cross build --release --target x86_64-apple-darwin
-
-# Windows x86_64
-cross build --release --target x86_64-pc-windows-gnu
+make cross-linux
+# 成果物: rust/target/x86_64-unknown-linux-musl/release/nidus
 ```
-
-成果物は `rust/target/<target>/release/nidus`（Windows は `.exe`）。
 
 ### アーカイブ作成
 
 ```bash
-# Linux / macOS
 tar czf nidus-<version>-x86_64-unknown-linux-musl.tar.gz \
     -C rust/target/x86_64-unknown-linux-musl/release nidus
-
-# Windows
-zip nidus-<version>-x86_64-pc-windows-gnu.zip \
-    rust/target/x86_64-pc-windows-gnu/release/nidus.exe
 ```
 
 ---

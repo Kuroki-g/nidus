@@ -28,6 +28,12 @@ uv run pytest packages/cli/tests/processor/test_markdown_processor.py
 # カバレッジ計測（small + medium、HTMLは .coverage_html/）
 make coverage
 
+# Rust ビルド
+make build           # デバッグビルド
+make release         # リリースビルド（rust/target/release/nidus）
+make test-rust       # Rust テスト
+make cross-linux     # Linux musl 静的バイナリ（cargo install cross が必要）
+
 # Docker イメージビルド
 ./build-container.sh
 ```
