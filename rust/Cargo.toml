@@ -35,6 +35,9 @@ reqwest      = { version = "0.12", default-features = false, features = ["rustls
 [profile.dev]
 debug = "line-tables-only"  # 行番号のみ(1=limitedよりさらに軽量)。リンク時間を短縮
 
+[profile.test]
+debug = 2  # テスト時はフルデバッグ情報（バックトレースでローカル変数を表示）
+
 # 依存クレートは opt-level=2 でビルドしキャッシュする。
 # tokenizers / lancedb / arrow 等の重いクレートの再コンパイルを防ぐ。
 [profile.dev.package."*"]
