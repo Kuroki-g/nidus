@@ -1,19 +1,18 @@
-CARGO := cargo --manifest-path rust/Cargo.toml
-CROSS := cross --manifest-path rust/Cargo.toml
+MANIFEST := --manifest-path rust/Cargo.toml
 
 ## Rust
 build:
-	$(CARGO) build --all
+	cargo build $(MANIFEST) --all
 
 release:
-	$(CARGO) build --release --all
+	cargo build $(MANIFEST) --release --all
 
 test-rust:
-	$(CARGO) test --all
+	cargo test $(MANIFEST) --all
 
 # クロスコンパイル（cross が必要: cargo install cross）
 cross-linux:
-	$(CROSS) build --release --target x86_64-unknown-linux-musl
+	cross build $(MANIFEST) --release --target x86_64-unknown-linux-musl
 
 ## Python
 lint:
@@ -28,10 +27,10 @@ fmt:
 	uv run ruff format packages/ && uv run ruff check packages/ --fix
 
 fmt-rust:
-	cargo fmt --manifest-path rust/Cargo.toml --all
+	cargo fmt $(MANIFEST) --all
 
 clippy:
-	cargo clippy --manifest-path rust/Cargo.toml --all -- -D warnings
+	cargo clippy $(MANIFEST) --all -- -D warnings
 
 coverage:
 	uv run pytest -m "small or medium" --cov=cli --cov=common --cov=mcp_server --cov-report=term-missing --cov-report=html:.coverage_html

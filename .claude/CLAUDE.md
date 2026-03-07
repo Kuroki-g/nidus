@@ -61,7 +61,7 @@ devcontainer 内は squid プロキシ（`http://http-proxy:3128`）経由のみ
 - `.github.com` / `.githubusercontent.com` — コード参照
 - `.pypi.org` / `.pythonhosted.org` — Python パッケージ
 - `.huggingface.co` — ML モデル
-- `docs.rs` — Rust クレートドキュメント
+- `docs.rs` / `doc.rust-lang.org` — Rust ドキュメント
 - `docs.python.org` — Python 標準ライブラリ
 - `docs.astral.sh` — uv / ruff ドキュメント
 - `docs.pydantic.dev` — Pydantic ドキュメント
