@@ -45,7 +45,7 @@ fn expand_paths(paths: &[PathBuf]) -> Vec<String> {
 pub async fn drop_files_in_db(paths: &[PathBuf], db: &Connection) -> Result<()> {
     let sources = expand_paths(paths);
     if sources.is_empty() {
-        eprintln!("No paths to delete.");
+        tracing::warn!("No paths to delete.");
         return Ok(());
     }
 
@@ -77,7 +77,7 @@ pub async fn drop_files_in_db(paths: &[PathBuf], db: &Connection) -> Result<()> 
             .with_context(|| format!("failed to delete from {table_name}"))?;
     }
 
-    eprintln!("Deleted records for {} path(s).", sources.len());
+    tracing::info!("Deleted records for {} path(s).", sources.len());
     Ok(())
 }
 

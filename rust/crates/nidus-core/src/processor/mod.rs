@@ -48,7 +48,7 @@ pub fn get_chunks(path: &Path) -> Option<Vec<String>> {
     match result {
         Ok(chunks) => Some(chunks),
         Err(e) => {
-            eprintln!("processor error [{}]: {e}", path.display());
+            tracing::error!("processor error [{}]: {e}", path.display());
             None
         }
     }

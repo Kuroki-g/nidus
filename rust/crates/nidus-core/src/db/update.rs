@@ -264,7 +264,7 @@ pub async fn update_files_in_db(
 
     let files = collect_files(paths);
     if files.is_empty() {
-        eprintln!("No valid files found.");
+        tracing::warn!("No valid files found.");
         return Ok(());
     }
 
@@ -284,7 +284,7 @@ pub async fn update_files_in_db(
         let hash = match file_hash(path) {
             Ok(h) => h,
             Err(e) => {
-                eprintln!("WARN: skipping {} (hash failed: {e})", path.display());
+                tracing::warn!("skipping {} (hash failed: {e})", path.display());
                 continue;
             }
         };
@@ -321,14 +321,14 @@ pub async fn update_files_in_db(
         }
     }
 
-    eprintln!(
+    tracing::info!(
         "Indexing {} file(s) ({} unchanged, skipped)...",
         to_process.len(),
         skipped
     );
 
     if to_process.is_empty() {
-        eprintln!("All files up to date.");
+        tracing::info!("All files up to date.");
         return Ok(());
     }
 
@@ -353,15 +353,15 @@ pub async fn update_files_in_db(
     let mut entries_with_chunks: Vec<(FileEntry, Vec<String>)> = Vec::new();
     for entry in to_process {
         let Some(chunks) = get_chunks(&entry.path) else {
-            eprintln!("[Skip] {} (no chunks generated)", entry.path.display());
+            tracing::warn!("skip {} (no chunks generated)", entry.path.display());
             continue;
         };
-        eprintln!("  {} ({} chunks)", entry.doc_name, chunks.len());
+        tracing::info!("  {} ({} chunks)", entry.doc_name, chunks.len());
         entries_with_chunks.push((entry, chunks));
     }
 
     if entries_with_chunks.is_empty() {
-        eprintln!("No files could be indexed.");
+        tracing::warn!("No files could be indexed.");
         return Ok(());
     }
 
@@ -428,7 +428,7 @@ pub async fn update_files_in_db(
     flush_chunks(&mut buffer, &doc_chunk_table, chunk_schema).await?;
 
     create_chunk_fts_index(&doc_chunk_table).await?;
-    eprintln!("Indexing complete.");
+    tracing::info!("Indexing complete.");
 
     Ok(())
 }

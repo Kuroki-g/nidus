@@ -44,21 +44,21 @@ pub async fn watch_directories(
 
     for dir in dirs {
         watcher.watch(dir, RecursiveMode::Recursive)?;
-        eprintln!("[watch] watching: {}", dir.display());
+        tracing::info!("watching: {}", dir.display());
     }
 
-    eprintln!("[watch] Press Ctrl-C to stop.");
+    tracing::info!("Press Ctrl-C to stop.");
 
     loop {
         tokio::select! {
             Some(res) = rx.recv() => {
                 match res {
                     Ok(event) => handle_event(event, db, model).await,
-                    Err(e) => eprintln!("[watch] notify error: {e}"),
+                    Err(e) => tracing::error!("notify error: {e}"),
                 }
             }
             _ = tokio::signal::ctrl_c() => {
-                eprintln!("[watch] Stopping.");
+                tracing::info!("Stopping.");
                 break;
             }
         }
@@ -80,10 +80,10 @@ async fn handle_event(event: notify::Event, db: &Connection, model: &EmbeddingMo
                 return;
             }
             for p in &paths {
-                eprintln!("[watch] created: {}", p.display());
+                tracing::info!("created: {}", p.display());
             }
             if let Err(e) = update_files_in_db(&paths, db, model).await {
-                eprintln!("[watch] add failed: {e}");
+                tracing::error!("add failed: {e}");
             }
         }
 
@@ -98,10 +98,10 @@ async fn handle_event(event: notify::Event, db: &Connection, model: &EmbeddingMo
                 return;
             }
             for p in &paths {
-                eprintln!("[watch] modified: {}", p.display());
+                tracing::info!("modified: {}", p.display());
             }
             if let Err(e) = update_files_in_db(&paths, db, model).await {
-                eprintln!("[watch] update failed: {e}");
+                tracing::error!("update failed: {e}");
             }
         }
 
@@ -116,10 +116,10 @@ async fn handle_event(event: notify::Event, db: &Connection, model: &EmbeddingMo
                 return;
             }
             for p in &paths {
-                eprintln!("[watch] deleted: {}", p.display());
+                tracing::info!("deleted: {}", p.display());
             }
             if let Err(e) = drop_files_in_db(&paths, db).await {
-                eprintln!("[watch] delete failed: {e}");
+                tracing::error!("delete failed: {e}");
             }
         }
 
@@ -132,15 +132,15 @@ async fn handle_event(event: notify::Event, db: &Connection, model: &EmbeddingMo
             let to = event.paths[1].clone();
 
             if is_supported(&from) {
-                eprintln!("[watch] renamed (delete old): {}", from.display());
+                tracing::info!("renamed (delete old): {}", from.display());
                 if let Err(e) = drop_files_in_db(&[from], db).await {
-                    eprintln!("[watch] delete failed: {e}");
+                    tracing::error!("delete failed: {e}");
                 }
             }
             if to.is_file() && is_supported(&to) {
-                eprintln!("[watch] renamed (add new): {}", to.display());
+                tracing::info!("renamed (add new): {}", to.display());
                 if let Err(e) = update_files_in_db(&[to], db, model).await {
-                    eprintln!("[watch] add failed: {e}");
+                    tracing::error!("add failed: {e}");
                 }
             }
         }
@@ -156,10 +156,10 @@ async fn handle_event(event: notify::Event, db: &Connection, model: &EmbeddingMo
                 return;
             }
             for p in &paths {
-                eprintln!("[watch] moved away (delete): {}", p.display());
+                tracing::info!("moved away (delete): {}", p.display());
             }
             if let Err(e) = drop_files_in_db(&paths, db).await {
-                eprintln!("[watch] delete failed: {e}");
+                tracing::error!("delete failed: {e}");
             }
         }
 
@@ -174,10 +174,10 @@ async fn handle_event(event: notify::Event, db: &Connection, model: &EmbeddingMo
                 return;
             }
             for p in &paths {
-                eprintln!("[watch] moved here (add): {}", p.display());
+                tracing::info!("moved here (add): {}", p.display());
             }
             if let Err(e) = update_files_in_db(&paths, db, model).await {
-                eprintln!("[watch] add failed: {e}");
+                tracing::error!("add failed: {e}");
             }
         }
 

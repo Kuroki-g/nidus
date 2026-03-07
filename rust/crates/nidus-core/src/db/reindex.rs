@@ -101,17 +101,17 @@ pub async fn reindex_db(
     let sources = collect_all_sources(db).await?;
 
     if sources.is_empty() {
-        eprintln!("No documents registered. Nothing to reindex.");
+        tracing::info!("No documents registered. Nothing to reindex.");
         return Ok(0);
     }
 
-    eprintln!("{} document(s) to reindex:", sources.len());
+    tracing::info!("{} document(s) to reindex:", sources.len());
     for s in &sources {
-        eprintln!("  {s}");
+        tracing::info!("  {s}");
     }
 
     if dry_run {
-        eprintln!("(dry-run: no changes made)");
+        tracing::info!("(dry-run: no changes made)");
         return Ok(sources.len());
     }
 
