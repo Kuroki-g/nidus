@@ -23,6 +23,7 @@ csv            = { workspace = true }
 zip            = { workspace = true }
 quick-xml      = { workspace = true }
 pdf-extract    = { workspace = true }
+ego-tree       = { workspace = true }
 
 [dev-dependencies]
 tempfile = "3"
