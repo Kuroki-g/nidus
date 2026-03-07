@@ -29,6 +29,7 @@ RUN apt-get update \
   gcc \
   libc6-dev \
   libonig-dev \
+  mold \
   pkg-config \
   libprotobuf-dev \
   protobuf-compiler \
