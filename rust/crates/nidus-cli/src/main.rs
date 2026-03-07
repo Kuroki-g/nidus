@@ -132,8 +132,8 @@ async fn cmd_status() -> Result<()> {
     println!("Total: {} table(s)", status.tables.len());
     println!("{}", "-".repeat(80));
     println!(
-        "{:<20} | {:>8} | {:>7} | {}",
-        "Table Name", "Rows", "Version", "Fields"
+        "{:<20} | {:>8} | {:>7} | Fields",
+        "Table Name", "Rows", "Version"
     );
     println!("{}", "-".repeat(80));
 
@@ -183,7 +183,7 @@ async fn cmd_list(keyword: Option<String>) -> Result<()> {
         return Ok(());
     }
 
-    println!("{:<60} | {}", "Source", "Name");
+    println!("{:<60} | Name", "Source");
     println!("{}", "-".repeat(80));
     for entry in &entries {
         println!("{:<60} | {}", entry.source, entry.doc_name);
@@ -234,8 +234,8 @@ async fn cmd_watch(dirs: Vec<PathBuf>) -> Result<()> {
 
 fn display_simple(results: &[SearchResult]) {
     println!(
-        "{:<8} | {:<10} | {:<15} | {}",
-        "Score", "Method", "Source", "Text"
+        "{:<8} | {:<10} | {:<15} | Text",
+        "Score", "Method", "Source"
     );
     println!("{}", "-".repeat(80));
 

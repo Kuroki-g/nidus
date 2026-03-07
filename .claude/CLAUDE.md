@@ -20,13 +20,11 @@ nidus search "キーワード"
 ./build-container.sh
 ```
 
-Python 版のコマンド（uv・pytest・MCP サーバー）は `docs/python-architecture.md` を参照。
-
 ## 開発方針
 
 コンセプト: **「AI が使いやすい日本語ローカル検索エンジン」**
 
-差別化の軸: 日本語精度 × AI可読性 × 軽量・ローカル。MCP は AI クライアント向けのアダプター層に過ぎず、コアは `packages/cli` の検索エンジン部分にある。
+差別化の軸: 日本語精度 × AI可読性 × 軽量・ローカル。
 
 現在の優先事項: **Milestone 1（AI可読性の改善）** → 詳細は `ROADMAP.md` を参照。
 
@@ -48,8 +46,6 @@ Python 版のコマンド（uv・pytest・MCP サーバー）は `docs/python-ar
 | medium | ローカルファイル・DB 可、外部ネットワーク不可 |
 | large  | 外部サービス・ネットワーク可（現時点では未使用） |
 
-**Python**: `@pytest.mark.small` / `@pytest.mark.medium` を付ける → 詳細は `docs/python-architecture.md`
-
 **Rust**: ソースファイル内 `#[test]` = small 相当、`tests/` ディレクトリ = medium 相当
 
 ## ネットワーク制限
@@ -59,15 +55,7 @@ devcontainer 内は squid プロキシ（`http://http-proxy:3128`）経由のみ
 **許可ドメイン:**
 - `.anthropic.com` / `claude.ai` — Anthropic サービス
 - `.github.com` / `.githubusercontent.com` — コード参照
-- `.pypi.org` / `.pythonhosted.org` — Python パッケージ
 - `.huggingface.co` — ML モデル
 - `docs.rs` / `doc.rust-lang.org` — Rust ドキュメント
-- `docs.python.org` — Python 標準ライブラリ
-- `docs.astral.sh` — uv / ruff ドキュメント
-- `docs.pydantic.dev` — Pydantic ドキュメント
 - `modelcontextprotocol.io` — MCP プロトコル仕様
 - `.qiita.com` / `.zenn.dev` — 日本語技術記事
-
-## アーキテクチャ
-
-Python 実装（`packages/`）の詳細は `docs/python-architecture.md` を参照。
