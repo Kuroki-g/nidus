@@ -35,6 +35,11 @@ RUN apt-get update \
   protobuf-compiler \
   ripgrep \
   xxd \
+  # Process / debug tools
+  procps \
+  htop \
+  gdb \
+  strace \
   && rm -rf /var/lib/apt/lists/*
 
 # --- Create non root user ---
