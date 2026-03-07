@@ -43,7 +43,7 @@ enum Commands {
         #[arg(long)]
         json: bool,
     },
-    /// Delete existing document information from the database. [NOT IMPLEMENTED]
+    /// Delete existing document information from the database.
     Drop {
         /// File(s) or directory to be removed
         #[arg(short = 'f', long = "file", required = true, value_name = "PATH")]
