@@ -4084,6 +4084,7 @@ dependencies = [
  "dotenvy",
  "ego-tree",
  "futures",
+ "lance-index",
  "lancedb",
  "once_cell",
  "pdf-extract",

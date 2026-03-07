@@ -6,6 +6,7 @@ edition = "2021"
 [dependencies]
 tokio          = { workspace = true }
 lancedb        = { workspace = true }
+lance-index    = { workspace = true }
 arrow-array    = { workspace = true }
 arrow-schema   = { workspace = true }
 safetensors    = { workspace = true }

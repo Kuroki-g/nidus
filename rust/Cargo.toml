@@ -8,6 +8,7 @@ resolver = "2"
 [workspace.dependencies]
 tokio        = { version = "1", features = ["full"] }
 lancedb      = "0.26"
+lance-index  = "=2.0.0"
 arrow-array  = "57"
 arrow-schema = "57"
 safetensors  = "0.4"
