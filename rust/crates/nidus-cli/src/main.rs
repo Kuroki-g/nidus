@@ -4,7 +4,10 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 use nidus_core::{
     config::Config,
-    db::{self, drop::drop_files_in_db, search::search_docs, update::update_files_in_db, SearchResult},
+    db::{
+        self, drop::drop_files_in_db, list::list_docs_in_db, search::search_docs,
+        status::db_status, update::update_files_in_db, SearchResult,
+    },
     embedding::EmbeddingModel,
     init::download_model,
 };
@@ -46,14 +49,18 @@ enum Commands {
         #[arg(short = 'f', long = "file", required = true, value_name = "PATH")]
         files: Vec<PathBuf>,
     },
-    /// List documents registered in the database. [NOT IMPLEMENTED]
+    /// List documents registered in the database.
+    ///
+    /// nidus list [keyword]
     List {
         /// Filter by keyword
         keyword: Option<String>,
     },
     /// Re-index all registered documents from scratch. [NOT IMPLEMENTED]
     Reindex,
-    /// Show metadata for the database. [NOT IMPLEMENTED]
+    /// Show metadata for the database.
+    ///
+    /// nidus status
     Status,
     /// Watch directories and auto-index on file changes. [NOT IMPLEMENTED]
     Watch {
@@ -72,9 +79,9 @@ async fn main() -> Result<()> {
         Commands::Add { files } => cmd_add(files).await?,
         Commands::Search { query, json } => cmd_search(query, json).await?,
         Commands::Drop { files } => cmd_drop(files).await?,
-        Commands::List { .. } => anyhow::bail!("list: not implemented yet"),
+        Commands::List { keyword } => cmd_list(keyword).await?,
         Commands::Reindex => anyhow::bail!("reindex: not implemented yet"),
-        Commands::Status => anyhow::bail!("status: not implemented yet"),
+        Commands::Status => cmd_status().await?,
         Commands::Watch { .. } => anyhow::bail!("watch: not implemented yet"),
     }
 
@@ -95,6 +102,57 @@ async fn cmd_add(files: Vec<PathBuf>) -> Result<()> {
     let model = EmbeddingModel::load(&config.model_dir)?;
 
     update_files_in_db(&files, &db, &model).await?;
+
+    Ok(())
+}
+
+async fn cmd_status() -> Result<()> {
+    let config = Config::load();
+    let db_path_str = config.db_path.to_string_lossy().into_owned();
+    let db = db::connect(&config.db_path).await?;
+
+    let status = db_status(&db, &db_path_str).await?;
+
+    println!("\n--- Database Status ---");
+    println!("Path:  {}", status.db_path);
+    println!("Total: {} table(s)", status.tables.len());
+    println!("{}", "-".repeat(80));
+    println!("{:<20} | {:>8} | {:>7} | {}", "Table Name", "Rows", "Version", "Fields");
+    println!("{}", "-".repeat(80));
+
+    for t in &status.tables {
+        let fields = t.fields.join(", ");
+        let display_fields = if fields.len() > 40 {
+            format!("{}...", &fields[..40])
+        } else {
+            fields
+        };
+        println!(
+            "{:<20} | {:>8} | {:>7} | {}",
+            t.name, t.row_count, t.version, display_fields
+        );
+    }
+    println!("{}", "-".repeat(80));
+
+    Ok(())
+}
+
+async fn cmd_list(keyword: Option<String>) -> Result<()> {
+    let config = Config::load();
+    let db = db::connect(&config.db_path).await?;
+
+    let entries = list_docs_in_db(&db, keyword.as_deref(), config.search_limit).await?;
+
+    if entries.is_empty() {
+        println!("No documents registered.");
+        return Ok(());
+    }
+
+    println!("{:<60} | {}", "Source", "Name");
+    println!("{}", "-".repeat(80));
+    for entry in &entries {
+        println!("{:<60} | {}", entry.source, entry.doc_name);
+    }
 
     Ok(())
 }
