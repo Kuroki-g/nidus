@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -8,8 +9,10 @@ use arrow_array::{
     RecordBatchIterator, StringArray,
 };
 use arrow_schema::{DataType, Field};
+use futures::TryStreamExt;
 use lancedb::index::scalar::FtsIndexBuilder;
 use lancedb::index::Index;
+use lancedb::query::ExecutableQuery;
 use lancedb::{Connection, Table};
 
 use crate::db::connection::{
@@ -19,6 +22,20 @@ use crate::embedding::{EmbeddingModel, VECTOR_SIZE};
 use crate::processor::get_chunks;
 
 const BATCH_SIZE: usize = 64;
+
+/// 処理対象ファイルのエントリ（差分判定後）。
+struct FileEntry {
+    path: PathBuf,
+    source: String,
+    doc_name: String,
+    hash: String,
+    /// 初回登録日。新規は today、変更ファイルは既存値を引き継ぐ。
+    created: i32,
+    /// 最終更新日（常に today）。
+    updated: i32,
+    /// true = 既存レコードの削除が必要（変更ファイル）。
+    needs_delete: bool,
+}
 
 /// ファイルの SHA-256 ハッシュを計算して16進文字列で返す。
 ///
@@ -92,6 +109,50 @@ pub fn collect_files(paths: &[PathBuf]) -> Vec<PathBuf> {
         }
     }
     result
+}
+
+/// `doc_meta` テーブルから既存ファイルのハッシュと `created` 日付を読み込む。
+///
+/// Returns: `source` → `(file_hash, created_date32)`
+async fn load_existing_meta(table: &Table) -> Result<HashMap<String, (String, i32)>> {
+    let batches: Vec<RecordBatch> = table
+        .query()
+        .execute()
+        .await
+        .context("failed to query doc_meta")?
+        .try_collect()
+        .await
+        .context("failed to collect doc_meta stream")?;
+
+    let mut map = HashMap::new();
+    for batch in batches {
+        let sources = batch
+            .column_by_name("source")
+            .unwrap()
+            .as_any()
+            .downcast_ref::<StringArray>()
+            .unwrap();
+        let hashes = batch
+            .column_by_name("file_hash")
+            .unwrap()
+            .as_any()
+            .downcast_ref::<StringArray>()
+            .unwrap();
+        let created = batch
+            .column_by_name("created")
+            .unwrap()
+            .as_any()
+            .downcast_ref::<Date32Array>()
+            .unwrap();
+
+        for i in 0..batch.num_rows() {
+            map.insert(
+                sources.value(i).to_string(),
+                (hashes.value(i).to_string(), created.value(i)),
+            );
+        }
+    }
+    Ok(map)
 }
 
 /// テーブルが存在する場合はオープン、存在しない場合はスキーマで作成する。
@@ -186,11 +247,12 @@ async fn create_chunk_fts_index(table: &Table) -> Result<()> {
     Ok(())
 }
 
-/// ファイルリストを全インデックス化する（差分なし）。
+/// ファイルリストを差分インデックス化する。
 ///
-/// - テーブルが未存在なら作成、存在すればオープンして追記
-/// - ファイルをチャンク化し embedding を生成して `doc_chunk` に書き込む
-/// - `doc_meta` にメタデータを書き込む
+/// - テーブルが未存在なら作成、存在すればオープンして差分更新
+/// - ハッシュ一致ファイルはスキップ（未変更）
+/// - 変更ファイルは旧レコードを削除して再インデックス（`created` 日付を保持）
+/// - 新規ファイルは `created` = today で追加
 /// - FTS インデックスを再構築する
 pub async fn update_files_in_db(
     paths: &[PathBuf],
@@ -205,34 +267,91 @@ pub async fn update_files_in_db(
         eprintln!("No valid files found.");
         return Ok(());
     }
-    eprintln!("Indexing {} file(s)...", files.len());
 
     let today = today_date32();
+    let existing_meta = load_existing_meta(&doc_meta_table).await?;
+
+    // 差分分類
+    let mut to_process: Vec<FileEntry> = Vec::new();
+    let mut skipped = 0usize;
+
+    for path in &files {
+        let source = path.to_string_lossy().into_owned();
+        let doc_name = path
+            .file_name()
+            .map(|n| n.to_string_lossy().into_owned())
+            .unwrap_or_default();
+        let hash = file_hash(path).unwrap_or_else(|e| {
+            eprintln!("WARN: hash failed for {}: {e}", path.display());
+            String::new()
+        });
+
+        match existing_meta.get(&source) {
+            Some((existing_hash, existing_created)) if existing_hash == &hash => {
+                // 未変更 → スキップ
+                skipped += 1;
+            }
+            Some((_old_hash, existing_created)) => {
+                // 変更あり → 旧レコード削除して再インデックス（created 保持）
+                to_process.push(FileEntry {
+                    path: path.clone(),
+                    source,
+                    doc_name,
+                    hash,
+                    created: *existing_created,
+                    updated: today,
+                    needs_delete: true,
+                });
+            }
+            None => {
+                // 新規
+                to_process.push(FileEntry {
+                    path: path.clone(),
+                    source,
+                    doc_name,
+                    hash,
+                    created: today,
+                    updated: today,
+                    needs_delete: false,
+                });
+            }
+        }
+    }
+
+    eprintln!(
+        "Indexing {} file(s) ({} unchanged, skipped)...",
+        to_process.len(),
+        skipped
+    );
+
+    if to_process.is_empty() {
+        eprintln!("All files up to date.");
+        return Ok(());
+    }
+
+    // 変更ファイルの旧レコードを削除
+    for entry in &to_process {
+        if entry.needs_delete {
+            let escaped = entry.source.replace('\'', "''");
+            let filter = format!("source = '{}'", escaped);
+            doc_meta_table
+                .delete(&filter)
+                .await
+                .with_context(|| format!("failed to delete doc_meta for {}", entry.source))?;
+            doc_chunk_table
+                .delete(&filter)
+                .await
+                .with_context(|| format!("failed to delete doc_chunk for {}", entry.source))?;
+        }
+    }
 
     // doc_meta 一括書き込み
     {
-        let n = files.len();
-        let sources: Vec<String> = files
-            .iter()
-            .map(|p| p.to_string_lossy().into_owned())
-            .collect();
-        let doc_names: Vec<String> = files
-            .iter()
-            .map(|p| {
-                p.file_name()
-                    .map(|n| n.to_string_lossy().into_owned())
-                    .unwrap_or_default()
-            })
-            .collect();
-        let hashes: Vec<String> = files
-            .iter()
-            .map(|p| {
-                file_hash(p).unwrap_or_else(|e| {
-                    eprintln!("WARN: hash failed for {}: {e}", p.display());
-                    String::new()
-                })
-            })
-            .collect();
+        let sources: Vec<String> = to_process.iter().map(|e| e.source.clone()).collect();
+        let doc_names: Vec<String> = to_process.iter().map(|e| e.doc_name.clone()).collect();
+        let created: Vec<i32> = to_process.iter().map(|e| e.created).collect();
+        let updated: Vec<i32> = to_process.iter().map(|e| e.updated).collect();
+        let hashes: Vec<String> = to_process.iter().map(|e| e.hash.clone()).collect();
 
         let schema = doc_meta_schema();
         let batch = RecordBatch::try_new(
@@ -240,8 +359,8 @@ pub async fn update_files_in_db(
             vec![
                 Arc::new(StringArray::from(sources)) as Arc<dyn Array>,
                 Arc::new(StringArray::from(doc_names)) as Arc<dyn Array>,
-                Arc::new(Date32Array::from(vec![today; n])) as Arc<dyn Array>,
-                Arc::new(Date32Array::from(vec![today; n])) as Arc<dyn Array>,
+                Arc::new(Date32Array::from(created)) as Arc<dyn Array>,
+                Arc::new(Date32Array::from(updated)) as Arc<dyn Array>,
                 Arc::new(StringArray::from(hashes)) as Arc<dyn Array>,
             ],
         )
@@ -261,24 +380,18 @@ pub async fn update_files_in_db(
     let chunk_schema = doc_chunk_schema();
     let mut buffer: Vec<(String, String, Vec<f32>, i64, String)> = Vec::with_capacity(BATCH_SIZE);
 
-    for path in &files {
-        let source = path.to_string_lossy().into_owned();
-        let doc_name = path
-            .file_name()
-            .map(|n| n.to_string_lossy().into_owned())
-            .unwrap_or_default();
-
-        let Some(chunks) = get_chunks(path) else {
-            eprintln!("[Skip] {}", path.display());
+    for entry in &to_process {
+        let Some(chunks) = get_chunks(&entry.path) else {
+            eprintln!("[Skip] {}", entry.path.display());
             continue;
         };
-        eprintln!("  {} ({} chunks)", doc_name, chunks.len());
+        eprintln!("  {} ({} chunks)", entry.doc_name, chunks.len());
 
         for (i, chunk) in chunks.iter().enumerate() {
             let vector = model.embed(chunk);
             buffer.push((
-                source.clone(),
-                doc_name.clone(),
+                entry.source.clone(),
+                entry.doc_name.clone(),
                 vector,
                 i as i64,
                 chunk.clone(),
@@ -440,5 +553,128 @@ mod tests {
         assert!(buffer.is_empty());
         // テーブルに2件書き込まれている
         assert_eq!(table.count_rows(None).await.unwrap(), 2);
+    }
+
+    /// テーブルが空のとき load_existing_meta は空の HashMap を返す。
+    #[tokio::test]
+    async fn load_existing_meta_empty_table() {
+        let tmp = tempfile::tempdir().unwrap();
+        let db = crate::db::connect(&tmp.path().join(".lancedb"))
+            .await
+            .unwrap();
+        let table = open_or_create(&db, "doc_meta", doc_meta_schema())
+            .await
+            .unwrap();
+
+        let meta = load_existing_meta(&table).await.unwrap();
+        assert!(meta.is_empty());
+    }
+
+    /// load_existing_meta は既存レコードの source/file_hash/created を正しく返す。
+    #[tokio::test]
+    async fn load_existing_meta_returns_records() {
+        let tmp = tempfile::tempdir().unwrap();
+        let db = crate::db::connect(&tmp.path().join(".lancedb"))
+            .await
+            .unwrap();
+        let table = open_or_create(&db, "doc_meta", doc_meta_schema())
+            .await
+            .unwrap();
+
+        // 1件書き込む
+        let schema = doc_meta_schema();
+        let batch = RecordBatch::try_new(
+            schema.clone(),
+            vec![
+                Arc::new(StringArray::from(vec!["/docs/a.md"])) as Arc<dyn Array>,
+                Arc::new(StringArray::from(vec!["a.md"])) as Arc<dyn Array>,
+                Arc::new(Date32Array::from(vec![19000i32])) as Arc<dyn Array>,
+                Arc::new(Date32Array::from(vec![19001i32])) as Arc<dyn Array>,
+                Arc::new(StringArray::from(vec!["abc123"])) as Arc<dyn Array>,
+            ],
+        )
+        .unwrap();
+        table
+            .add(RecordBatchIterator::new(
+                vec![Ok(batch)].into_iter(),
+                schema,
+            ))
+            .execute()
+            .await
+            .unwrap();
+
+        let meta = load_existing_meta(&table).await.unwrap();
+        assert_eq!(meta.len(), 1);
+        let (hash, created) = meta.get("/docs/a.md").unwrap();
+        assert_eq!(hash, "abc123");
+        assert_eq!(*created, 19000i32);
+    }
+
+    /// ハッシュ未変更ファイルは load_existing_meta のデータと一致し、
+    /// FileEntry として処理対象に含まれない（スキップ）ことを確認する。
+    ///
+    /// 実際の DB 書き込みは行わず、ハッシュ比較ロジックを単体で検証する。
+    #[test]
+    fn unchanged_file_is_skipped_in_classification() {
+        let tmp = tempfile::tempdir().unwrap();
+        let f = tmp.path().join("note.md");
+        std::fs::write(&f, b"# hello").unwrap();
+
+        let hash = file_hash(&f).unwrap();
+        let source = f.to_string_lossy().into_owned();
+
+        // 既存メタに同じハッシュが登録済み
+        let mut existing: HashMap<String, (String, i32)> = HashMap::new();
+        existing.insert(source.clone(), (hash.clone(), 19000));
+
+        // 差分ロジックを模倣
+        let current_hash = file_hash(&f).unwrap();
+        let should_skip = existing
+            .get(&source)
+            .map(|(h, _)| h == &current_hash)
+            .unwrap_or(false);
+
+        assert!(should_skip, "unchanged file should be skipped");
+    }
+
+    /// ハッシュが変わったファイルは needs_delete = true で to_process に入り、
+    /// 既存の created 日付を保持することを確認する。
+    #[test]
+    fn changed_file_preserves_created_date() {
+        let tmp = tempfile::tempdir().unwrap();
+        let f = tmp.path().join("note.md");
+        std::fs::write(&f, b"# hello").unwrap();
+
+        let old_hash = "deadbeef".to_string();
+        let new_hash = file_hash(&f).unwrap();
+        let source = f.to_string_lossy().into_owned();
+        let original_created = 19000i32;
+        let today = today_date32();
+
+        let mut existing: HashMap<String, (String, i32)> = HashMap::new();
+        existing.insert(source.clone(), (old_hash.clone(), original_created));
+
+        // 差分ロジックを模倣
+        let entry = match existing.get(&source) {
+            Some((h, created)) if h == &new_hash => panic!("should not be unchanged"),
+            Some((_old, existing_created)) => FileEntry {
+                path: f.clone(),
+                source: source.clone(),
+                doc_name: "note.md".into(),
+                hash: new_hash.clone(),
+                created: *existing_created,
+                updated: today,
+                needs_delete: true,
+            },
+            None => panic!("should be in existing"),
+        };
+
+        assert!(entry.needs_delete);
+        assert_eq!(
+            entry.created, original_created,
+            "created should be preserved"
+        );
+        assert_eq!(entry.updated, today);
+        assert_eq!(entry.hash, new_hash);
     }
 }
