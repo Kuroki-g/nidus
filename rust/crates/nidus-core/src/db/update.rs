@@ -348,13 +348,30 @@ pub async fn update_files_in_db(
         }
     }
 
-    // doc_meta 一括書き込み
+    // チャンク生成（doc_meta 書き込み前にフィルタリング）
+    // get_chunks が None を返したファイルは doc_meta にも含めない。
+    let mut entries_with_chunks: Vec<(FileEntry, Vec<String>)> = Vec::new();
+    for entry in to_process {
+        let Some(chunks) = get_chunks(&entry.path) else {
+            eprintln!("[Skip] {} (no chunks generated)", entry.path.display());
+            continue;
+        };
+        eprintln!("  {} ({} chunks)", entry.doc_name, chunks.len());
+        entries_with_chunks.push((entry, chunks));
+    }
+
+    if entries_with_chunks.is_empty() {
+        eprintln!("No files could be indexed.");
+        return Ok(());
+    }
+
+    // doc_meta 一括書き込み（チャンク生成成功分のみ）
     {
-        let sources: Vec<String> = to_process.iter().map(|e| e.source.clone()).collect();
-        let doc_names: Vec<String> = to_process.iter().map(|e| e.doc_name.clone()).collect();
-        let created: Vec<i32> = to_process.iter().map(|e| e.created).collect();
-        let updated: Vec<i32> = to_process.iter().map(|e| e.updated).collect();
-        let hashes: Vec<String> = to_process.iter().map(|e| e.hash.clone()).collect();
+        let sources: Vec<String> = entries_with_chunks.iter().map(|(e, _)| e.source.clone()).collect();
+        let doc_names: Vec<String> = entries_with_chunks.iter().map(|(e, _)| e.doc_name.clone()).collect();
+        let created: Vec<i32> = entries_with_chunks.iter().map(|(e, _)| e.created).collect();
+        let updated: Vec<i32> = entries_with_chunks.iter().map(|(e, _)| e.updated).collect();
+        let hashes: Vec<String> = entries_with_chunks.iter().map(|(e, _)| e.hash.clone()).collect();
 
         let schema = doc_meta_schema();
         let batch = RecordBatch::try_new(
@@ -383,13 +400,7 @@ pub async fn update_files_in_db(
     let chunk_schema = doc_chunk_schema();
     let mut buffer: Vec<(String, String, Vec<f32>, i64, String)> = Vec::with_capacity(BATCH_SIZE);
 
-    for entry in &to_process {
-        let Some(chunks) = get_chunks(&entry.path) else {
-            eprintln!("[Skip] {}", entry.path.display());
-            continue;
-        };
-        eprintln!("  {} ({} chunks)", entry.doc_name, chunks.len());
-
+    for (entry, chunks) in &entries_with_chunks {
         for (i, chunk) in chunks.iter().enumerate() {
             let vector = model.embed(chunk);
             buffer.push((
