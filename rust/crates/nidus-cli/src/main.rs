@@ -4,7 +4,7 @@ use anyhow::Result;
 use clap::{Parser, Subcommand};
 use nidus_core::{
     config::Config,
-    db::{self, search::search_docs, update::update_files_in_db, SearchResult},
+    db::{self, drop::drop_files_in_db, search::search_docs, update::update_files_in_db, SearchResult},
     embedding::EmbeddingModel,
     init::download_model,
 };
@@ -71,7 +71,7 @@ async fn main() -> Result<()> {
         Commands::Init => cmd_init().await?,
         Commands::Add { files } => cmd_add(files).await?,
         Commands::Search { query, json } => cmd_search(query, json).await?,
-        Commands::Drop { .. } => anyhow::bail!("drop: not implemented yet"),
+        Commands::Drop { files } => cmd_drop(files).await?,
         Commands::List { .. } => anyhow::bail!("list: not implemented yet"),
         Commands::Reindex => anyhow::bail!("reindex: not implemented yet"),
         Commands::Status => anyhow::bail!("status: not implemented yet"),
@@ -96,6 +96,13 @@ async fn cmd_add(files: Vec<PathBuf>) -> Result<()> {
 
     update_files_in_db(&files, &db, &model).await?;
 
+    Ok(())
+}
+
+async fn cmd_drop(files: Vec<PathBuf>) -> Result<()> {
+    let config = Config::load();
+    let db = db::connect(&config.db_path).await?;
+    drop_files_in_db(&files, &db).await?;
     Ok(())
 }
 
