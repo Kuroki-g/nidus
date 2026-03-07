@@ -23,4 +23,4 @@ clippy:
 	cargo clippy $(MANIFEST) --all -- -D warnings
 
 notices:
-	python scripts/generate_third_party_notices.py
+	cd rust && cargo about generate -o ../THIRD-PARTY-NOTICES.txt about.hbs

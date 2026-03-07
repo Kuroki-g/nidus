@@ -35,6 +35,9 @@ notify       = "6"
 tracing      = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
+[profile.release]
+strip = true
+
 [profile.dev]
 debug = "line-tables-only"  # 行番号のみ(1=limitedよりさらに軽量)。リンク時間を短縮
 
