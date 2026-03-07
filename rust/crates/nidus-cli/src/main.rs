@@ -40,6 +40,27 @@ enum Commands {
         #[arg(long)]
         json: bool,
     },
+    /// Delete existing document information from the database. [NOT IMPLEMENTED]
+    Drop {
+        /// File(s) or directory to be removed
+        #[arg(short = 'f', long = "file", required = true, value_name = "PATH")]
+        files: Vec<PathBuf>,
+    },
+    /// List documents registered in the database. [NOT IMPLEMENTED]
+    List {
+        /// Filter by keyword
+        keyword: Option<String>,
+    },
+    /// Re-index all registered documents from scratch. [NOT IMPLEMENTED]
+    Reindex,
+    /// Show metadata for the database. [NOT IMPLEMENTED]
+    Status,
+    /// Watch directories and auto-index on file changes. [NOT IMPLEMENTED]
+    Watch {
+        /// Directory to watch
+        #[arg(short = 'f', long = "file", required = true, value_name = "PATH")]
+        dirs: Vec<PathBuf>,
+    },
 }
 
 #[tokio::main]
@@ -50,6 +71,11 @@ async fn main() -> Result<()> {
         Commands::Init => cmd_init().await?,
         Commands::Add { files } => cmd_add(files).await?,
         Commands::Search { query, json } => cmd_search(query, json).await?,
+        Commands::Drop { .. } => anyhow::bail!("drop: not implemented yet"),
+        Commands::List { .. } => anyhow::bail!("list: not implemented yet"),
+        Commands::Reindex => anyhow::bail!("reindex: not implemented yet"),
+        Commands::Status => anyhow::bail!("status: not implemented yet"),
+        Commands::Watch { .. } => anyhow::bail!("watch: not implemented yet"),
     }
 
     Ok(())
