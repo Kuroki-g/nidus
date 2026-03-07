@@ -128,22 +128,22 @@ async fn load_existing_meta(table: &Table) -> Result<HashMap<String, (String, i3
     for batch in batches {
         let sources = batch
             .column_by_name("source")
-            .unwrap()
+            .context("doc_meta: column 'source' not found")?
             .as_any()
             .downcast_ref::<StringArray>()
-            .unwrap();
+            .context("doc_meta: column 'source' is not StringArray")?;
         let hashes = batch
             .column_by_name("file_hash")
-            .unwrap()
+            .context("doc_meta: column 'file_hash' not found")?
             .as_any()
             .downcast_ref::<StringArray>()
-            .unwrap();
+            .context("doc_meta: column 'file_hash' is not StringArray")?;
         let created = batch
             .column_by_name("created")
-            .unwrap()
+            .context("doc_meta: column 'created' not found")?
             .as_any()
             .downcast_ref::<Date32Array>()
-            .unwrap();
+            .context("doc_meta: column 'created' is not Date32Array")?;
 
         for i in 0..batch.num_rows() {
             map.insert(
@@ -281,10 +281,13 @@ pub async fn update_files_in_db(
             .file_name()
             .map(|n| n.to_string_lossy().into_owned())
             .unwrap_or_default();
-        let hash = file_hash(path).unwrap_or_else(|e| {
-            eprintln!("WARN: hash failed for {}: {e}", path.display());
-            String::new()
-        });
+        let hash = match file_hash(path) {
+            Ok(h) => h,
+            Err(e) => {
+                eprintln!("WARN: skipping {} (hash failed: {e})", path.display());
+                continue;
+            }
+        };
 
         match existing_meta.get(&source) {
             Some((existing_hash, existing_created)) if existing_hash == &hash => {
