@@ -4153,6 +4153,8 @@ dependencies = [
  "nidus-core",
  "serde_json",
  "tokio",
+ "tracing",
+ "tracing-subscriber",
 ]
 
 [[package]]
@@ -4184,6 +4186,7 @@ dependencies = [
  "tempfile",
  "tokenizers",
  "tokio",
+ "tracing",
  "zip",
 ]
 
