@@ -31,6 +31,7 @@ ego-tree     = "0.9"
 sha2         = "0.10"
 futures      = "0.3"
 reqwest      = { version = "0.12", default-features = false, features = ["rustls-tls", "stream"] }
+notify       = "6"
 
 [profile.dev]
 debug = "line-tables-only"  # 行番号のみ(1=limitedよりさらに軽量)。リンク時間を短縮

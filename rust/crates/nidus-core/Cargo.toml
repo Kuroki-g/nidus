@@ -28,6 +28,7 @@ ego-tree       = { workspace = true }
 sha2           = { workspace = true }
 futures        = { workspace = true }
 reqwest        = { workspace = true }
+notify         = { workspace = true }
 
 [dev-dependencies]
 tempfile = "3"
