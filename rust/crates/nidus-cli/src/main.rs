@@ -5,8 +5,8 @@ use clap::{Parser, Subcommand};
 use nidus_core::{
     config::Config,
     db::{
-        self, drop::drop_files_in_db, list::list_docs_in_db, search::search_docs,
-        status::db_status, update::update_files_in_db, SearchResult,
+        self, drop::drop_files_in_db, list::list_docs_in_db, reindex::reindex_db,
+        search::search_docs, status::db_status, update::update_files_in_db, SearchResult,
     },
     embedding::EmbeddingModel,
     init::download_model,
@@ -56,8 +56,14 @@ enum Commands {
         /// Filter by keyword
         keyword: Option<String>,
     },
-    /// Re-index all registered documents from scratch. [NOT IMPLEMENTED]
-    Reindex,
+    /// Re-index all registered documents from scratch.
+    ///
+    /// nidus reindex [--dry-run]
+    Reindex {
+        /// Show what would be reindexed without making any changes
+        #[arg(long)]
+        dry_run: bool,
+    },
     /// Show metadata for the database.
     ///
     /// nidus status
@@ -80,7 +86,7 @@ async fn main() -> Result<()> {
         Commands::Search { query, json } => cmd_search(query, json).await?,
         Commands::Drop { files } => cmd_drop(files).await?,
         Commands::List { keyword } => cmd_list(keyword).await?,
-        Commands::Reindex => anyhow::bail!("reindex: not implemented yet"),
+        Commands::Reindex { dry_run } => cmd_reindex(dry_run).await?,
         Commands::Status => cmd_status().await?,
         Commands::Watch { .. } => anyhow::bail!("watch: not implemented yet"),
     }
@@ -117,7 +123,10 @@ async fn cmd_status() -> Result<()> {
     println!("Path:  {}", status.db_path);
     println!("Total: {} table(s)", status.tables.len());
     println!("{}", "-".repeat(80));
-    println!("{:<20} | {:>8} | {:>7} | {}", "Table Name", "Rows", "Version", "Fields");
+    println!(
+        "{:<20} | {:>8} | {:>7} | {}",
+        "Table Name", "Rows", "Version", "Fields"
+    );
     println!("{}", "-".repeat(80));
 
     for t in &status.tables {
@@ -133,6 +142,24 @@ async fn cmd_status() -> Result<()> {
         );
     }
     println!("{}", "-".repeat(80));
+
+    Ok(())
+}
+
+async fn cmd_reindex(dry_run: bool) -> Result<()> {
+    let config = Config::load();
+    let db = db::connect(&config.db_path).await?;
+
+    let model = if dry_run {
+        None
+    } else {
+        Some(EmbeddingModel::load(&config.model_dir)?)
+    };
+
+    let count = reindex_db(&db, model.as_ref(), dry_run).await?;
+    if count > 0 && !dry_run {
+        println!("Reindexed {} document(s).", count);
+    }
 
     Ok(())
 }
