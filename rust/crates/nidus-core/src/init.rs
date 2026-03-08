@@ -1,7 +1,9 @@
-use std::{io::Write, path::Path};
+use std::{
+    io::{Read, Write},
+    path::Path,
+};
 
 use anyhow::{Context, Result};
-use futures::StreamExt;
 
 pub const DEFAULT_MODEL_ID: &str = "hotchpotch/static-embedding-japanese";
 
@@ -38,21 +40,23 @@ pub async fn download_model(model_dir: &Path) -> Result<()> {
 }
 
 async fn download_file(url: &str, dest: &Path) -> Result<()> {
-    let client = reqwest::Client::new();
-    let response = client
-        .get(url)
-        .send()
+    let url = url.to_string();
+    let dest = dest.to_path_buf();
+    tokio::task::spawn_blocking(move || download_file_sync(&url, &dest))
         .await
+        .context("download thread panicked")?
+}
+
+fn download_file_sync(url: &str, dest: &std::path::PathBuf) -> Result<()> {
+    let response = ureq::get(url)
+        .call()
         .with_context(|| format!("GET {url}"))?;
 
-    anyhow::ensure!(
-        response.status().is_success(),
-        "HTTP {} for {url}",
-        response.status()
-    );
-
-    let total = response.content_length();
-    let mut stream = response.bytes_stream();
+    let total = response
+        .headers()
+        .get("content-length")
+        .and_then(|v| v.to_str().ok())
+        .and_then(|v| v.parse::<u64>().ok());
 
     // 途中でエラーになっても壊れたファイルが残らないよう .tmp に書いてからリネーム
     let mut tmp_name = dest.file_name().unwrap().to_os_string();
@@ -61,11 +65,16 @@ async fn download_file(url: &str, dest: &Path) -> Result<()> {
     let mut file = std::fs::File::create(&tmp_path)
         .with_context(|| format!("cannot create {}", tmp_path.display()))?;
 
+    let mut reader = response.into_body().into_reader();
+    let mut buf = [0u8; 8192];
     let mut downloaded: u64 = 0;
-    while let Some(chunk) = stream.next().await {
-        let chunk = chunk.context("stream read error")?;
-        file.write_all(&chunk).context("write error")?;
-        downloaded += chunk.len() as u64;
+    loop {
+        let n = reader.read(&mut buf).context("stream read error")?;
+        if n == 0 {
+            break;
+        }
+        file.write_all(&buf[..n]).context("write error")?;
+        downloaded += n as u64;
 
         if let Some(total) = total {
             let pct = downloaded * 100 / total;
