@@ -30,7 +30,7 @@ ego-tree     = "0.9"
 sha2         = "0.10"
 futures-util = { version = "0.3", default-features = false }
 ureq         = { version = "3", default-features = false, features = ["rustls"] }
-notify       = "6"
+notify       = "8"
 tracing      = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
