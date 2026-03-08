@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
 use arrow_array::StringArray;
-use futures::TryStreamExt;
+use futures_util::TryStreamExt;
 use lancedb::query::{ExecutableQuery, QueryBase};
 use lancedb::Connection;
 

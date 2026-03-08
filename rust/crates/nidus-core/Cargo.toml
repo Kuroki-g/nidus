@@ -17,7 +17,6 @@ serde_json     = { workspace = true }
 anyhow         = { workspace = true }
 dotenvy        = { workspace = true }
 dirs           = { workspace = true }
-once_cell      = { workspace = true }
 regex          = { workspace = true }
 pulldown-cmark = { workspace = true }
 scraper        = { workspace = true }
@@ -27,7 +26,7 @@ quick-xml      = { workspace = true }
 pdf-extract    = { workspace = true }
 ego-tree       = { workspace = true }
 sha2           = { workspace = true }
-futures        = { workspace = true }
+futures-util   = { workspace = true }
 ureq           = { workspace = true }
 notify         = { workspace = true }
 tracing        = { workspace = true }

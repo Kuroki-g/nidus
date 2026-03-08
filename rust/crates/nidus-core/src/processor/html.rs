@@ -1,15 +1,16 @@
 use std::path::Path;
 
 use anyhow::Result;
+use std::sync::LazyLock;
+
 use ego_tree::iter::Edge;
-use once_cell::sync::Lazy;
 use regex::Regex;
 use scraper::{Html, Node};
 
 use crate::processor::chunker::sections_to_chunks;
 
-static RE_SPACES: Lazy<Regex> = Lazy::new(|| Regex::new(r"[^\S\n]+").unwrap());
-static RE_NEWLINES: Lazy<Regex> = Lazy::new(|| Regex::new(r"\n{3,}").unwrap());
+static RE_SPACES: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"[^\S\n]+").unwrap());
+static RE_NEWLINES: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\n{3,}").unwrap());
 
 const SKIP_TAGS: &[&str] = &["script", "style", "noscript", "iframe", "svg", "head"];
 const HEADING_TAGS: &[&str] = &["h1", "h2", "h3", "h4", "h5", "h6"];

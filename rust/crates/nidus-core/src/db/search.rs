@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use anyhow::{Context, Result};
 use arrow_array::{Int64Array, RecordBatch, StringArray};
-use futures::TryStreamExt;
+use futures_util::TryStreamExt;
 use lance_index::scalar::FullTextSearchQuery;
 use lancedb::query::{ExecutableQuery, QueryBase};
 use lancedb::{Connection, Table};

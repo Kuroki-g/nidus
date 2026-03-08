@@ -1,12 +1,13 @@
 use std::path::Path;
 
 use anyhow::Result;
-use once_cell::sync::Lazy;
+use std::sync::LazyLock;
+
 use regex::Regex;
 
 use crate::processor::chunker::{sections_to_chunks, sentence_boundary_chunker};
 
-static ADOC_HEADING: Lazy<Regex> = Lazy::new(|| Regex::new(r"(?m)^(={1,6})\s+(.+)$").unwrap());
+static ADOC_HEADING: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"(?m)^(={1,6})\s+(.+)$").unwrap());
 
 pub fn chunk_plain_text(
     path: &Path,

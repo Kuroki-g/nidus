@@ -9,7 +9,7 @@ use arrow_array::{
     RecordBatchIterator, StringArray,
 };
 use arrow_schema::{DataType, Field};
-use futures::TryStreamExt;
+use futures_util::TryStreamExt;
 use lancedb::index::scalar::FtsIndexBuilder;
 use lancedb::index::Index;
 use lancedb::query::ExecutableQuery;

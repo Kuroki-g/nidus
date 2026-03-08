@@ -1,12 +1,13 @@
 use std::path::Path;
 
 use anyhow::Result;
-use once_cell::sync::Lazy;
+use std::sync::LazyLock;
+
 use regex::Regex;
 
 use crate::processor::chunker::sentence_boundary_chunker;
 
-static RE_PDF_SPACES: Lazy<Regex> = Lazy::new(|| Regex::new(r"[ \t]+").unwrap());
+static RE_PDF_SPACES: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"[ \t]+").unwrap());
 
 pub fn chunk_pdf(
     path: &Path,
