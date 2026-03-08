@@ -4,7 +4,6 @@
   "dockerComposeFile": "./compose.yml",
   "workspaceFolder": "/workspace/${localWorkspaceFolderBasename}",
   "service": "claude-dev",
-  "postCreateCommand": "uv sync && cd rust && cargo build",
   "mounts": [
     "source=${localWorkspaceFolder},target=/workspace/${localWorkspaceFolderBasename},type=bind,consistency=cached",
     "source=${localEnv:HOME}/.claude,target=/home/vscode/.claude,type=bind",
@@ -12,8 +11,9 @@
     "source=${localEnv:HOME}/.cache/uv,target=/home/vscode/.cache/uv,type=bind",
     "source=${localEnv:HOME}/.cargo/registry,target=/home/vscode/.cargo/registry,type=bind",
     "source=${localEnv:HOME}/.cargo/git,target=/home/vscode/.cargo/git,type=bind",
-    "source=nidus-sccache,target=/home/vscode/.cache/sccache,type=volume"
+    "source=${localEnv:HOME}/.cache/nidus-sccache,target=/home/vscode/.cache/sccache,type=bind"
   ],
+  "initializeCommand": "mkdir -p ${localEnv:HOME}/.cache/nidus-sccache",
   "forwardPorts": [],
   "portsAttributes": {
     "30000-50000": {

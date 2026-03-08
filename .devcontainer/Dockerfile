@@ -28,6 +28,7 @@ RUN apt-get update \
   g++ \
   gcc \
   libc6-dev \
+  libssl-dev \
   libonig-dev \
   mold \
   pkg-config \
